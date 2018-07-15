@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import cn.sql.cloud.entity.MapQuery;
 import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.sql.SQLService;
 
@@ -51,5 +52,32 @@ public class SQLController {
 	public SQLResponse columns(HttpSession session, String tableName) {
 		logger.debug("columns()");
 		return SQLResponse.build(this.sqlService.columns(tableName));
+	}
+	
+	
+	/**
+	 * 执行 SELECT 语句
+	 * @param sql
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/executeQuery")
+	public SQLResponse executeQuery(String sql) {
+		logger.debug("executeQuery({})", sql);
+		MapQuery mapQuery = this.sqlService.executeQuery(sql);
+		return SQLResponse.build(mapQuery);
+	}
+	
+	/**
+	 * 执行DDL,DML语句
+	 * @param sql
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/executeUpdate")
+	public SQLResponse executeUpdate(String sql) {
+		logger.debug("executeUpdate({})", sql);
+		int updateCount = this.sqlService.executeUpdate(sql);
+		return SQLResponse.build(updateCount);
 	}
 }

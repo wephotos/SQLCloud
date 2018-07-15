@@ -2,6 +2,11 @@ package cn.sql.cloud.entity;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * 表对象
@@ -22,7 +27,8 @@ public class Table implements Serializable {
 	private Timestamp updateTime;
 	//表注释
 	private String tableComment;
-	
+	//列集合
+	private List<Column> columns = Collections.emptyList();
 	
 	public String getTableName() {
 		return tableName;
@@ -55,11 +61,15 @@ public class Table implements Serializable {
 	public void setTableComment(String tableComment) {
 		this.tableComment = tableComment;
 	}
-
+	public List<Column> getColumns() {
+		return columns;
+	}
+	public void setColumns(List<Column> columns) {
+		this.columns = columns;
+	}
 	@Override
 	public String toString() {
-		return "Table [tableName=" + tableName + ", createTime=" + createTime + ", updateTime=" + updateTime
-				+ ", tableComment=" + tableComment + "]";
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
 	}
 
 }

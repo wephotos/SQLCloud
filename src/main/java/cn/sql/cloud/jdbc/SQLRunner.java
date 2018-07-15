@@ -9,6 +9,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.sql.cloud.entity.MapQuery;
 import cn.sql.cloud.exception.SQLCloudException;
 
 /**
@@ -35,6 +36,33 @@ public class SQLRunner {
 			statement = conn.prepareStatement(sql);
 			rs = statement.executeQuery();
 			return JDBCMapper.resultSet2List(rs, beanClass);
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+			throw new SQLCloudException(e);
+		}finally {//关闭 ResultSet,statement
+			if(rs != null) {
+				try {rs.close();} catch (SQLException e) {}
+			}
+			if(statement != null) {
+				try {statement.close();} catch (SQLException e) {}
+			}
+		}
+	}
+	
+	/**
+	 * 执行查询语句，返回多条记录
+	 * @param sql
+	 * @param beanClass
+	 * @return
+	 */
+	public static MapQuery executeMapQuery(String sql){
+		Connection conn = JDBCManager.getConnection();
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = conn.prepareStatement(sql);
+			rs = statement.executeQuery();
+			return JDBCMapper.resultSet2MapQuery(rs);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);

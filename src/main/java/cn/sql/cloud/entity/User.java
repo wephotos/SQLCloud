@@ -2,6 +2,9 @@ package cn.sql.cloud.entity;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 /**
  * 用户
  * @author TQ
@@ -37,7 +40,7 @@ public class User implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "User [username=" + username + ", password=" + password + "]";
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
 	}
 	
 }

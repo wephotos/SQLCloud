@@ -13,11 +13,15 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.sql.cloud.entity.MapQuery;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.utils.SQLCloudUtils;
 
@@ -50,6 +54,35 @@ public class JDBCMapper {
 			throw new SQLCloudException(e);
 		}
 	}
+	
+	/**
+	 * 将结果集转换为Map,返回的结果中包含列名
+	 * @param rs
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static MapQuery resultSet2MapQuery(ResultSet rs) {
+		try {
+			List<Map<String,Object>> results = new ArrayList<Map<String,Object>>();
+			while(rs.next()) {
+				results.add(resultSet2Bean(rs, LinkedHashMap.class));
+			}
+			List<String> columnNames = new ArrayList<String>();
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int columnCount = rsmd.getColumnCount();
+			for (int i = 1; i <= columnCount; i++) {
+				columnNames.add(rsmd.getColumnLabel(i));
+			}
+			
+			MapQuery mapQuery = new MapQuery();
+			mapQuery.setResults(results);
+			mapQuery.setColumnNames(columnNames);
+			return mapQuery;
+		} catch (SQLException e) {
+			logger.error(e.getMessage());
+			throw new SQLCloudException(e);
+		}
+	}
 
 	/**
 	 * 将结果集转换成Bean
@@ -58,14 +91,27 @@ public class JDBCMapper {
 	 * @param beanClass
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> T resultSet2Bean(ResultSet rs, Class<T> beanClass) {
 		try {
-			T bean = beanClass.newInstance();
-			Field[] fields = beanClass.getDeclaredFields();
+			T bean;
+			Field[] fields = null;
+			if(Map.class == beanClass) {
+				bean = (T)new HashMap<Object,Object>();
+			} else {
+				bean = beanClass.newInstance();
+				if(!(bean instanceof Map)) {
+					fields = beanClass.getDeclaredFields();
+				}
+			}
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			for (int i = 1; i <= columnCount; i++) {
 				String columnName = rsmd.getColumnLabel(i);
+				if(bean instanceof Map) {
+					((Map<String, Object>) bean).put(columnName, rs.getObject(i));
+					continue;
+				}
 				for (Field field : fields) {
 					String fieldName = field.getName();
 					if (!columnFieldNameEq(columnName, fieldName)) {

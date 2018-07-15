@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -145,6 +148,37 @@ public final class SQLCloudUtils {
 			}
 		}
 		return camelCase.toString();
+	}
+	
+	/**
+	 * 从查询语句中解析出字段 如果使用  <code>*</code> 查询返回空集合
+	 * @param querySQL 查询SQL
+	 * @return
+	 */
+	public static List<String> parseColumnNames(String querySQL){
+		Objects.requireNonNull(querySQL);
+		List<String> columnNames = new ArrayList<String>();
+		String SQL = querySQL.toUpperCase();
+		if(SQL.startsWith("SELECT")) {
+			int fromIndex = SQL.indexOf(" FROM ");
+			String trimNames = SQL.substring(7, fromIndex).trim();
+			if(trimNames.contains("*")) {
+				return columnNames;
+			}else {
+				String[] names = trimNames.split(",");
+				for(String name:names) {
+					String trimName = name.trim();
+					if(trimName.contains(" ")) {
+						columnNames.add(trimName.split("\\s+")[1]);
+					}else {
+						columnNames.add(trimName);
+					}
+				}
+			}
+		}else {
+			throw new SQLCloudException("querySQL 必须以 SELECT 开头. ->" + querySQL);
+		}
+		return columnNames;
 	}
 
 }
