@@ -57,4 +57,8 @@ public class SQLResponse implements Serializable {
 	public static SQLResponse build() {
 		return new SQLResponse();
 	}
+	
+	public static SQLResponse build(Object value) {
+		return new SQLResponse().setValue(value);
+	}
 }

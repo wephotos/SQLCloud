@@ -15,25 +15,29 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	/**
-	 * 账户
+	 * 用户名
 	 */
-	private String account;
+	private String username;
 	/**
 	 * 密码
 	 */
 	private String password;
 	
-	public String getAccount() {
-		return account;
+	public String getUsername() {
+		return username;
 	}
-	public void setAccount(String account) {
-		this.account = account;
+	public void setUsername(String username) {
+		this.username = username;
 	}
 	public String getPassword() {
 		return password;
 	}
 	public void setPassword(String password) {
 		this.password = password;
+	}
+	@Override
+	public String toString() {
+		return "User [username=" + username + ", password=" + password + "]";
 	}
 	
 }

@@ -1,7 +1,6 @@
 package cn.sql.cloud.controller;
 
-import java.util.Date;
-
+import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
@@ -11,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import cn.sql.cloud.entity.SQLResponse;
+import cn.sql.cloud.sql.SQLService;
 
 
 /***
@@ -25,11 +25,31 @@ public class SQLController {
 	//log
 	static final Logger logger = LoggerFactory.getLogger(SQLController.class);
 	
+	@Resource
+	private SQLService sqlService;
+	
+	/**
+	 * 获取数据库中的所有表
+	 * @param session
+	 * @return
+	 */
 	@ResponseBody
-	@RequestMapping("/listTables")
-	public SQLResponse listTables(HttpSession session) {
-		logger.info(new Date().toString());
-		return SQLResponse.build().setValue(new Date().toString());
+	@RequestMapping("/tables")
+	public SQLResponse tables(HttpSession session) {
+		logger.debug("tables()");
+		return SQLResponse.build(this.sqlService.tables());
 	}
 
+	/**
+	 * 获取表的列信息
+	 * @param session
+	 * @param tableName
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/columns")
+	public SQLResponse columns(HttpSession session, String tableName) {
+		logger.debug("columns()");
+		return SQLResponse.build(this.sqlService.columns(tableName));
+	}
 }

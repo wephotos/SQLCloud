@@ -5,7 +5,7 @@ package cn.sql.cloud.sql;
  * @author TQ
  *
  */
-public enum SQLTypes {
+public enum SQLType {
 
 	ORACLE,MYSQL,SQLSERVER
 	

@@ -9,9 +9,9 @@ import com.mysql.jdbc.Driver;
  *
  */
 public class SQLMysql implements ISQL {
-
+	
 	private SQLMysql() {
-
+		
 	}
 
 	static class InstanceProvider {
@@ -28,8 +28,18 @@ public class SQLMysql implements ISQL {
 	}
 
 	@Override
-	public String getJdbcURL(String host, int port, String database) {
+	public String getURL(String host, int port, String database) {
 		return "jdbc:mysql://" + host + ":" + port + "/" + database;
+	}
+
+	@Override
+	public String getSQLTables(String database) {
+		return "select table_name,create_time,update_time,table_comment from information_schema.tables where table_schema='"+database+"' and table_type='base table'";
+	}
+
+	@Override
+	public String getSQLColumns(String database, String tableName) {
+		return "select column_name,data_type,column_type,column_comment from information_schema.columns where table_schema='"+database+"' and table_name='"+tableName+"'";
 	}
 
 }
