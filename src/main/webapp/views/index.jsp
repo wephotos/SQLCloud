@@ -38,13 +38,13 @@ $(function(){
 		var $nav = $('<li class="nav-item"></li>');
 		var $tab = $('<a class="nav-link active" id="'+jdbc.name+'-tab" data-toggle="tab" href="#'+jdbc.name+'" role="tab">'+jdbc.name+'</a>');
 		var $close = $('<span class="glyphicon glyphicon-remove"></span>');
-		var $panel = $('<div class="tab-pane fade show active" id="'+jdbc.name+'" role="tabpanel">4</div>');
-		
+		var $panel = $('<div class="tab-pane fade show active" id="'+jdbc.name+'" role="tabpanel"></div>');
+		var $iframe = $('<iframe id="main-iframe" class="main-iframe" src="${path}/views/container.jsp"></iframe>');
 		//移除选中状态
 		$("a[data-toggle=tab]").removeClass("active");
 		$("div[role=tabpanel]").removeClass("show active");
 		
-		$("#jdbcTabContent").append($panel);
+		$("#jdbcTabContent").append($panel.append($iframe));
 		$("#jdbcTabs").append($nav.append($tab.append($close)));
 		holding(jdbc.name);
 		//关闭Tab
@@ -88,10 +88,24 @@ $(function(){
 .nav-link{
 	padding: 0.1rem 0.5rem;
 }
+.main-iframe{
+	width: 100%;
+    height: 100%;
+    border: 0;
+}
+html,body{
+	height: 99%;
+}
+main,.tab-content{
+	height: 100%;
+}
+.tab-content>div{
+	height: 100%;
+}
 </style>
 </head>
-<body>
-	<header>
+<body style="padding-top: 75px;">
+	<header class="fixed-top">
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="padding: 0.1rem 0.5rem">
 	  <a class="navbar-brand" href="#">SQLCloud</a>
 	  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,7 +114,7 @@ $(function(){
 	  <div class="collapse navbar-collapse" id="navbarNavDropdown">
 	    <ul class="navbar-nav">
 	      <li class="nav-item active">
-	        <a class="nav-link" href="#" data-toggle="modal" data-target="#JDBCModalCenter">创建连接 <span class="sr-only">(current)</span></a>
+	        <a class="nav-link" href="#" data-toggle="modal" data-target="#JDBCModalCenter">新连接 <span class="sr-only">(current)</span></a>
 	      </li>
 	      <!-- <li class="nav-item dropdown">
 	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -116,9 +130,9 @@ $(function(){
 	  </div>
     <button type="button" class="btn btn-dark" onclick="javascript:location.href='${path}/user/logout'">退出</button>
 	</nav>
+	<ul class="nav nav-tabs" id="jdbcTabs" role="tablist"></ul>
 	</header>
 	<main role="main">
-		<ul class="nav nav-tabs" id="jdbcTabs" role="tablist"></ul>
 		<div class="tab-content" id="jdbcTabContent"></div>
 	</main>
 
@@ -170,7 +184,7 @@ $(function(){
 			  <div class="form-group row">
 			    <label for="colPortLabel" class="col-sm-2 col-form-label">端口</label>
 			    <div class="col-sm-10">
-			      <input type="number" class="form-control" id="colPortLabel" name="port" placeholder="Port" required="required" maxlength="4">
+			      <input type="number" class="form-control" id="colPortLabel" name="port" placeholder="Port" required="required" value="3306" max="9999" min="1000">
 			    </div>
 			  </div>
 			  <div class="form-group row">

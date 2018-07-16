@@ -39,6 +39,11 @@
     		background-image: url("${path}/resources/img/login_bg.jpg");
     	}
     </style>
+    <script type="text/javascript">
+    	if(window.top != window){
+    		window.top.location.href = "${path}/views/login.jsp";
+    	}
+    </script>
 </head>
 <body>
 	<div class="container">
