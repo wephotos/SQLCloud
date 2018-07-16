@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>SQLCloud Sign In</title>
 	<script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
     <link href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
@@ -10,9 +11,26 @@
     <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     
     <style type="text/css">
-    	.form-control{padding-left: 26px;}
-    	.form{background: rgba(255,255,255,0.2);width:400px;margin:300px auto;border-radius: 2px;}
-    	.fa{display: inline-block;top: 27px;left: 6px;position: relative;color: #ccc;}
+    	.form-control{
+    		padding-left: 26px;
+    	}
+    	.form{
+	    	background: rgba(255,255,255,0.2);
+	    	width:400px;
+	    	border-radius: 2px;
+	    	position: fixed;
+	    	top: 50%;
+	    	left: 50%;
+	    	margin-top: -100px;
+	    	margin-left: -200px;
+    	}
+    	.fa{
+	    	display: inline-block;
+	    	top: 27px;
+	    	left: 6px;
+	    	position: relative;
+	    	color: #ccc;
+    	}
     	html,body{
     		height:100%;
     		background-repeat: no-repeat;

@@ -17,12 +17,21 @@
     		-moz-background-size:100% 100%;
     		background-image: url("${path}/resources/img/login_bg.jpg");
     	}
-    	.row{background: rgba(255,255,255,0.2);width:400px;margin:300px auto;border-radius: 2px;}
+    	.form{
+	    	background: rgba(255,255,255,0.2);
+	    	width:400px;
+	    	border-radius: 2px;
+	    	position: fixed;
+	    	top: 50%;
+	    	left: 50%;
+	    	margin-top: -100px;
+	    	margin-left: -200px;
+    	}
     </style>
 </head>
 <body>
 	<div class="container">
-	    <div class="row">
+	    <div class="form row">
 	        <div class="form-horizontal col-md-offset-2">
 	            <h3 class="form-title">SQLCloud Login Failed</h3>
 	            <div class="col-md-10">

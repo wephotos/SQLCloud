@@ -21,7 +21,8 @@ import cn.sql.cloud.exception.SQLCloudException;
 public class SQLRunner {
 	//log
 	private static final Logger logger = LoggerFactory.getLogger(SQLRunner.class);
-	
+	//指示从数据库中提取最大行数
+	public static final int MAX_FETCH_SIZE = 100;
 	/**
 	 * 执行查询语句，返回多条记录
 	 * @param sql
@@ -62,6 +63,7 @@ public class SQLRunner {
 		try {
 			statement = conn.prepareStatement(sql);
 			rs = statement.executeQuery();
+			rs.setFetchSize(MAX_FETCH_SIZE);
 			return JDBCMapper.resultSet2MapQuery(rs);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());

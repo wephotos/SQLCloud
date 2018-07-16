@@ -33,7 +33,7 @@ public class UserController {
 		logger.info("login -> {}",  user.toString());
 		if(SQLCloudUtils.verifyUser(user)) {
 			WEBUtils.setSessionUser(session, user);
-			return "index";
+			return "redirect:/";
 		}else {
 			return "error/login_failed";
 		}
@@ -47,7 +47,7 @@ public class UserController {
 	@RequestMapping("/logout")
 	public String logout(HttpSession session) {
 		session.invalidate();
-		return "login";
+		return "redirect:/views/login.jsp";
 	}
 
 }
