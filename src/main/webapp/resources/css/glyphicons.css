@@ -23,3 +23,6 @@
 .glyphicon-remove:before {
   content: "\e014";
 }
+.glyphicon-play:before {
+  content: "\e072";
+}

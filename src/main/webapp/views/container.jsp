@@ -25,6 +25,17 @@ html,body{
 .col{
 	padding: 0px;
 }
+.sql-toolbar{
+	padding:0px;
+	list-style: none;
+	margin-bottom: 0px;
+}
+.sql-toolbar > li{
+	display: inline-block;
+}
+.sql-toolbar > li label{
+	padding:8px;
+}
 </style>
 
 <script type="text/javascript">
@@ -42,8 +53,18 @@ $(function(){
 			rootPId: -1
 		},
 		callback: {
-			beforeExpand: function(treeId, treeNode){
-				
+			beforeExpand: function(treeId, table){
+				if($.isArray(table.children)){
+					return true;
+				}
+				$.post("${path}/sql/columns",{tableName:table.id},function(data, status, xhr){
+					var columns = data.value.map(function(column){
+						return {
+							name:column.columnName + "("+column.columnType+")"
+						};
+					});
+					tableTree.addNodes(table,columns);
+				},"json");
 			}
 		}
 	};
@@ -59,6 +80,65 @@ $(function(){
 		});
 		tableTree = $.fn.zTree.init($("#tableTree"), setting, zNodes);
 	},"json");
+	
+	//执行SQL
+	$("#executeSQL").on("click",function(){
+		var sql = $("textarea[name=sql]").val();
+		if(!sql.replace(/^\s+/,'')){
+			return false;
+		}
+		var url;
+		var sql = sql.toUpperCase().replace(/^\s+/,'');//转成大写，去除开头空格
+		if(sql.startWith('SELECT')){
+			url = '${path}/sql/executeQuery';
+		}else if(sql.startWith('UPDATE')){
+			url = '${path}/sql/executeUpdate';
+		}else{
+			$("#console").html(sql + ' is not supported');
+			return false;
+		}
+		$.post(url,{sql:sql},function(data, status, xhr){
+			if(data.code == 200){
+				if(sql.startWith('SELECT')){
+					dynamicTable(data.value);
+				}else{
+					$("#console").html("execute successfully. " + data.value + " row updated");
+				}
+			}else{
+				$("#console").html(data.message);
+			}
+		},"json");
+	});
+	
+	//根据查询结果动态输出表格
+	function dynamicTable(mapQuery){
+		var table = $("#tableModel").clone().attr("id",new Date().getTime());
+		var columnRow = table.find("thead tr");
+		$.each(mapQuery.columnNames,function(index,columnName){
+			columnRow.append("<td>"+columnName+"</td>");
+		});
+		var tbody = table.find("tbody");
+		$.each(mapQuery.results,function(i,item){
+			var dataRow = $("<tr></tr>");
+			$.each(mapQuery.columnNames,function(index,columnName){
+				dataRow.append("<td>"+item[columnName]+"</td>");
+			});
+			tbody.append(dataRow);
+		});
+		$("#console").html(table);
+	}
+	
+	//为String原型提供 startWith 方法
+	String.prototype.startWith=function(str){
+		if(!str){
+			return false;
+		}
+		if(this.substr(0,str.length) == str){
+			return true;
+		}else{
+			return false;
+		}
+	}
 });
 </script>
 </head>
@@ -68,21 +148,32 @@ $(function(){
 	    <div class="col-3 bg-light">
 	    	<ul id="tableTree" class="ztree"></ul>
 	    </div>
-  		<div class="col-9" style="padding: 5px;">
+  		<div class="col-9" style="padding: 0px 5px;">
   			<div class="container-fluid">
   				<div class="row" style="height: 60%;">
-  					<div class="col">
-				      SQLEditor
+  					<div class="col" style="box-sizing: border-box;padding-top: 50px;padding-bottom: 5px;">
+  					  <nav class="bg-light" style="position: absolute;left: 0px;top: 0px;width: 100%;">
+	  					  <ul class="sql-toolbar">
+	  					  	<li><label id="executeSQL" class="btn bg-light text-primary"><span class="glyphicon glyphicon-play"></span> 运行</label></li>
+	  					  </ul>
+  					  </nav>
+				      <textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>
 				    </div>
   				</div>
-  				<div class="row bg-light" style="height: 40%;">
-  					<div class="col">
-				      Console
+  				<div class="row bg-white border border-secondary" style="height: 40%;padding: 5px;">
+  					<div id="console" class="col">
+				      
 				    </div>
   				</div>
   			</div>
   		</div>
 	  </div>
+	</div>
+	<div style="display: none;">
+		<table id="tableModel" class="table table-bordered table-hover table-sm">
+			<thead class="thead-light"><tr></tr></thead>
+			<tbody></tbody>
+		</table>
 	</div>
 </body>
 </html>
