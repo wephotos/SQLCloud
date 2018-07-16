@@ -1,7 +1,5 @@
 package cn.sql.cloud.sql;
 
-import oracle.jdbc.driver.OracleDriver;
-
 /**
  * Oracle
  * 
@@ -24,7 +22,7 @@ public class SQLOracle implements ISQL {
 
 	@Override
 	public String getDirverClass() {
-		return OracleDriver.class.getName();
+		return "oracle.jdbc.driver.OracleDriver";
 	}
 
 	@Override
