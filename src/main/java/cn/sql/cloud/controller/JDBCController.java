@@ -1,7 +1,6 @@
 package cn.sql.cloud.controller;
 
-import java.util.List;
-
+import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.stereotype.Controller;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import cn.sql.cloud.entity.JDBCInfo;
 import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
-import cn.sql.cloud.jdbc.JDBCManager;
+import cn.sql.cloud.service.JDBCInfoService;
 import cn.sql.cloud.web.WEBUtils;
 
 /**
@@ -22,6 +21,9 @@ import cn.sql.cloud.web.WEBUtils;
 @Controller
 @RequestMapping(value="/jdbc")
 public class JDBCController {
+	
+	@Resource
+	private JDBCInfoService jdbcInfoService;
 
 	/**
 	 * 添加一个JDBC连接信息
@@ -33,9 +35,26 @@ public class JDBCController {
 	@RequestMapping("/add")
 	public SQLResponse add(JDBCInfo jdbc, HttpSession session) {
 		User user = WEBUtils.getSessionUser(session);
-		boolean success = JDBCManager.addJdbcInfo(jdbc, user.getUsername());
-		WEBUtils.setSessionJdbcName(session, jdbc.getName());
-		return SQLResponse.build().setValue(success);
+		if(jdbcInfoService.add(jdbc, user.getUsername())) {
+			WEBUtils.setSessionJdbcName(session, jdbc.getName());
+			return SQLResponse.build();
+		}else {
+			return SQLResponse.build().setCode(-1).setMessage("添加连接信息失败");
+		}
+	}
+	
+	/**
+	 * 移除数据库连接
+	 * @param session 会话
+	 * @param jdbcName JDBC名称
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/remove")
+	public SQLResponse remove(HttpSession session, String jdbcName) {
+		User user = WEBUtils.getSessionUser(session);
+		boolean bool = jdbcInfoService.remove(jdbcName, user.getUsername());
+		return SQLResponse.build(bool);
 	}
 	
 	/**
@@ -45,8 +64,8 @@ public class JDBCController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("/holder")
-	public SQLResponse holder(HttpSession session, String jdbcName) {
+	@RequestMapping("/holding")
+	public SQLResponse holding(HttpSession session, String jdbcName) {
 		WEBUtils.setSessionJdbcName(session, jdbcName);
 		return SQLResponse.build();
 	}
@@ -57,10 +76,9 @@ public class JDBCController {
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping("/getList")
-	public SQLResponse getList(HttpSession session) {
+	@RequestMapping("/list")
+	public SQLResponse list(HttpSession session) {
 		String username = WEBUtils.getSessionUser(session).getUsername();
-		List<JDBCInfo> jdbcList = JDBCManager.getJdbcInfoList(username);
-		return SQLResponse.build(jdbcList);
+		return SQLResponse.build(jdbcInfoService.list(username));
 	}
 }

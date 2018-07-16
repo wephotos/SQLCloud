@@ -9,6 +9,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import cn.sql.cloud.entity.JDBCInfo;
 import cn.sql.cloud.jdbc.JDBCManager;
+import cn.sql.cloud.service.SQLService;
 
 /**
  * JUnit 测试类

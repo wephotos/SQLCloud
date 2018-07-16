@@ -1,4 +1,4 @@
-package cn.sql.cloud.sql;
+package cn.sql.cloud.service;
 
 import java.util.List;
 
@@ -10,6 +10,8 @@ import cn.sql.cloud.entity.MapQuery;
 import cn.sql.cloud.entity.Table;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.jdbc.SQLRunner;
+import cn.sql.cloud.sql.ISQL;
+import cn.sql.cloud.sql.SQLManager;
 
 /**
  * SQL业务

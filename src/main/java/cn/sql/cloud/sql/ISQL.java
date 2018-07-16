@@ -1,7 +1,7 @@
 package cn.sql.cloud.sql;
 
 /**
- * SQL相关信息接口
+ * SQL接口，提供一个统一标准，屏蔽各数据库差别
  * @author TQ
  *
  */

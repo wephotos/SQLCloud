@@ -1,4 +1,4 @@
-package cn.sql.cloud.sql;
+package cn.sql.cloud.service;
 
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,19 +16,21 @@ import cn.sql.cloud.jdbc.JDBCManager;
 @Aspect
 public class ServiceAspectj {
 	//log
-	private final static Logger logger = LoggerFactory.getLogger(ServiceAspectj.class);
+	final static Logger logger = LoggerFactory.getLogger(ServiceAspectj.class);
 
 	/**
 	 * 名字以Service结束类下的所有方法
 	 */
-	@Pointcut("execution(* cn.sql.cloud.sql.*Service.*(..))")
+	@Pointcut("execution(* cn.sql.cloud.service.*Service.*(..))")
 	public void service() {
 		
 	}
 	
+	/**
+	 * 在方法后关闭连接
+	 */
 	@After("service()")
 	public void after() {
 		JDBCManager.closeConnection();
-		logger.info("closed jdbc Connection.");
 	}
 }

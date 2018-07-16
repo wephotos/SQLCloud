@@ -49,7 +49,30 @@ public final class JDBCManager {
 		if(list == null) {
 			list = Collections.emptyList();
 		}
-		return list;
+		return Collections.unmodifiableList(list);
+	}
+	
+	/**
+	 * 移除用户下的JDBC连接
+	 * @param username
+	 * @param jdbcName
+	 * @return
+	 */
+	public static boolean removeJdbcInfo(String username, String jdbcName) {
+		List<JDBCInfo> list = USER_JDBC_INFO_MAP.get(username);
+		if(list != null) {
+			JDBCInfo remove = null;
+			for(JDBCInfo jdbc:list) {
+				if(jdbc.getName().equals(jdbcName)) {
+					remove = jdbc;
+					break;
+				}
+			}
+			if(remove != null) {
+				return list.remove(remove);
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -76,17 +99,27 @@ public final class JDBCManager {
 	
 	/**
 	 * 将JDBC连接添加到用户下
-	 * @param jdbcInfo
+	 * @param jdbc
 	 * @param username
 	 * @return
 	 */
-	public static boolean addJdbcInfo(JDBCInfo jdbcInfo, String username) {
+	public static boolean addJdbcInfo(JDBCInfo jdbc, String username) {
 		List<JDBCInfo> list = USER_JDBC_INFO_MAP.get(username);
 		if(list == null) {
 			list = new ArrayList<JDBCInfo>();
 			USER_JDBC_INFO_MAP.put(username, list);
 		}
-		return list.add(jdbcInfo);
+		Connection conn = null;
+		try {
+			conn = createConnection(jdbc);
+		} catch (SQLException e) {
+			throw new SQLCloudException("连接失败:" + e.getMessage());
+		}finally {
+			if(conn != null) {
+				try {conn.close();} catch (SQLException e) {}
+			}
+		}
+		return list.add(jdbc);
 	}
 	
 	/**
@@ -109,20 +142,28 @@ public final class JDBCManager {
 		Connection conn = CONN_HOLDER.get();
 		if(conn == null) {
 			JDBCInfo jdbc = getHolderJdbcInfo();
-			ISQL sql = SQLManager.getSQL(jdbc.getSqlType());
-			String url = sql.getURL(jdbc.getHost(), jdbc.getPort(), jdbc.getDatabase());
-			
 			try {
-				Class.forName(sql.getDirverClass());
-				conn = DriverManager.getConnection(url, jdbc.getUsername(), jdbc.getPassword());
-				CONN_HOLDER.remove();
-				CONN_HOLDER.set(conn);
-			} catch (ClassNotFoundException | SQLException e) {
+				conn = createConnection(jdbc);
+			} catch (SQLException e) {
 				logger.error(e.getMessage());
 				throw new SQLCloudException(e);
 			}
+			CONN_HOLDER.remove();
+			CONN_HOLDER.set(conn);
 		}
 		return conn;
+	}
+	
+	private static Connection createConnection(JDBCInfo jdbc) throws SQLException {
+		ISQL sql = SQLManager.getSQL(jdbc.getSqlType());
+		String url = sql.getURL(jdbc.getHost(), jdbc.getPort(), jdbc.getDatabase());
+		try {
+			Class.forName(sql.getDirverClass());
+			return DriverManager.getConnection(url, jdbc.getUsername(), jdbc.getPassword());
+		} catch (ClassNotFoundException e) {
+			logger.error(e.getMessage());
+			throw new SQLCloudException(e);
+		}
 	}
 	
 	/**
@@ -134,6 +175,7 @@ public final class JDBCManager {
 			CONN_HOLDER.remove();
 			try {
 				conn.close();
+				logger.info("closed jdbc Connection -> " + conn.toString());
 			} catch (SQLException e) {
 				logger.error(e.getMessage());
 				throw new SQLCloudException(e);

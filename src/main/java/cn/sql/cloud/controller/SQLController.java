@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import cn.sql.cloud.entity.MapQuery;
 import cn.sql.cloud.entity.SQLResponse;
-import cn.sql.cloud.sql.SQLService;
+import cn.sql.cloud.service.SQLService;
 
 
 /***
