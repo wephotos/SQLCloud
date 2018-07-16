@@ -35,12 +35,9 @@ public class JDBCController {
 	@RequestMapping("/add")
 	public SQLResponse add(JDBCInfo jdbc, HttpSession session) {
 		User user = WEBUtils.getSessionUser(session);
-		if(jdbcInfoService.add(jdbc, user.getUsername())) {
-			WEBUtils.setSessionJdbcName(session, jdbc.getName());
-			return SQLResponse.build();
-		}else {
-			return SQLResponse.build().setCode(-1).setMessage("添加连接信息失败");
-		}
+		jdbcInfoService.add(jdbc, user.getUsername());
+		WEBUtils.setSessionJdbcName(session, jdbc.getName());
+		return SQLResponse.build();
 	}
 	
 	/**

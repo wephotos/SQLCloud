@@ -109,6 +109,11 @@ public final class JDBCManager {
 			list = new ArrayList<JDBCInfo>();
 			USER_JDBC_INFO_MAP.put(username, list);
 		}
+		for(JDBCInfo _jdbc:list) {
+			if(_jdbc.getName().equals(jdbc.getName())) {
+				return false;
+			}
+		}
 		Connection conn = null;
 		try {
 			conn = createConnection(jdbc);

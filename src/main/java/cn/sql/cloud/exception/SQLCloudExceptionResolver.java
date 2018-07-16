@@ -33,12 +33,10 @@ public class SQLCloudExceptionResolver extends SimpleMappingExceptionResolver {
 	}
 
 	@Override
-	protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response, Object handler,
-			Exception ex) {
-		String xrw = request.getHeader("X-Requested-With");
+	protected ModelAndView doResolveException(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+		String xrw = request.getHeader("X-Requested-With");//X-Requested-With: XMLHttpRequest
 		if ("XMLHttpRequest".equals(xrw)) {
-			SQLResponse error = SQLResponse.build().setCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
-					.setMessage(ex.getMessage());
+			SQLResponse error = SQLResponse.build().setCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR).setMessage(ex.getMessage());
 			try {
 				PrintWriter writer = response.getWriter();
 				writer.println(SQLCloudUtils.object2JSON(error));

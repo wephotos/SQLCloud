@@ -29,7 +29,7 @@ public class SQLMysql implements ISQL {
 
 	@Override
 	public String getURL(String host, int port, String database) {
-		return "jdbc:mysql://" + host + ":" + port + "/" + database + "?characterEncoding=utf8&useSSL=true";
+		return "jdbc:mysql://" + host + ":" + port + "/" + database + "?characterEncoding=utf8&useSSL=false&autoReconnect=true";
 	}
 
 	@Override

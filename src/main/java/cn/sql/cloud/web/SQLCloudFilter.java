@@ -45,6 +45,8 @@ public class SQLCloudFilter implements Filter {
 			throws IOException, ServletException {
 		HttpServletRequest request = (HttpServletRequest)req;
 		HttpServletResponse response = (HttpServletResponse)rsp;
+		request.setCharacterEncoding("UTF-8");
+		response.setCharacterEncoding("UTF-8");
 		HttpSession session = request.getSession();
 		String servletPath = request.getServletPath();
 		logger.info("servletPath ->" + servletPath);
