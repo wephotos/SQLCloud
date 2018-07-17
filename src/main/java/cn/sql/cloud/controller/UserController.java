@@ -30,7 +30,7 @@ public class UserController {
 	 */
 	@RequestMapping(value="/login", method=RequestMethod.POST)
 	public String login(HttpSession session, User user) {
-		logger.info("login -> {}",  user.toString());
+		logger.info("login -> {}",  user.getUsername());
 		if(SQLCloudUtils.verifyUser(user)) {
 			WEBUtils.setSessionUser(session, user);
 			return "redirect:/";
