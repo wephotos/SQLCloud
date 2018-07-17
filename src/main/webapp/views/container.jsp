@@ -64,11 +64,16 @@ $(function(){
 		view:{
 			showLine:false
 		},
-		simpleData: {
-			enable: true,
-			idKey: "id",
-			pIdKey: "pId",
-			rootPId: -1
+		data:{
+			simpleData: {
+				enable: true,
+				idKey: "id",
+				pIdKey: "pId",
+				rootPId: -1
+			},
+			key:{
+				title:"comment"
+			}
 		},
 		callback: {
 			beforeExpand: function(treeId, table){//展开表格加载列
@@ -78,7 +83,8 @@ $(function(){
 				$.post("${path}/sql/columns",{tableName:table.id},function(data, status, xhr){
 					var columns = data.value.map(function(column){
 						return {
-							name:column.columnName + "("+column.columnType+")"
+							name:column.columnName + "("+column.columnType+")",
+							comment:column.columnComment
 						};
 					});
 					tableTree.addNodes(table,columns);
@@ -94,7 +100,8 @@ $(function(){
 				id:item.tableName,
 				name:item.tableName,
 				nodeType:'table',
-				isParent:true
+				isParent:true,
+				comment:item.tableComment
 			};
 		});
 		tableTree = $.fn.zTree.init($("#tableTree"), setting, zNodes);
