@@ -113,9 +113,16 @@ $(function(){
 	
 	//执行SQL
 	$("#executeSQL").on("click",function(){
-		//var sql = $("textarea[name=sql]").val();
-        var sql = editor.getValue();
+		var range = editor.getSelectionRange();
+		var sql = editor.session.getTextRange(range);
+		//选中 > 光标 > 内容 
 		if(!sql.replace(/^\s+/,'')){
+			sql = editor.getTextCursorRange();
+			if(!sql.replace(/^\s+/,'')){
+				sql = editor.getValue();
+			}
+		}
+		if(!sql.replace(/^\s+\n+\r+/,'')){
 			return false;
 		}
 		//转成大写，去除开头空格
@@ -157,7 +164,7 @@ $(function(){
 			dataRow.append("<td>"+(i+1)+"</td>");
 			$.each(mapQuery.columnNames,function(index,columnName){  
 				var content = item[columnName];
-				dataRow.append("<td data-toggle='popover' data-placement='top' data-content='"+(content?content:"")+"'>"+content+"</td>");
+				dataRow.append("<td data-toggle='popover' data-placement='top' data-content='"+(content?content:"")+"'>"+(content?content:"(Null)")+"</td>");
 			});
 			tbody.append(dataRow);
 		});
@@ -261,6 +268,53 @@ $(function(){
             enableSnippets: true,
             enableLiveAutocompletion: true
         });
+        //获取光标处SQL语句块
+        editor.getTextCursorRange = function(){
+        	//行数 
+        	var lines = this.session.getLength();
+        	//光标行 
+        	var line = this.selection.getCursor().row;
+        	//结束位置 
+        	var end = {row:lines,column:0};
+        	for(var i=line;i<lines;i++){
+	        	var lineRange = {
+	        				start:{
+	        					row:i,
+	        					column:0
+	        				},
+	        				end:{
+	        					row:i+1,
+	        					column:0
+	        				}
+	        			};
+	        	var lineText = this.session.getTextRange(lineRange);
+	        	if(!lineText.replace(/^\s+/,'')){
+	        		return "";
+	        	}
+	        	if(lineText.indexOf(';') > -1){
+	        		end = {row:i+1,column:0};
+	        		break;
+	        	}
+        	}
+        	var start = {row:0,column:0};
+        	for(var i=line;i>0;i--){
+        		var lineRange = {
+        				start:{
+        					row:i-1,
+        					column:0
+        				},
+        				end:{
+        					row:i,
+        					column:0
+        				}
+        			};
+	        	var lineText = this.session.getTextRange(lineRange);
+	        	if(lineText.indexOf(';') > -1){
+	        		start = {row:i,column:0};
+	        	}
+        	}
+        	return this.session.getTextRange({start:start, end:end});
+        }
 	</script>
 </body>
 </html>
