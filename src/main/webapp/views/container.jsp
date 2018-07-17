@@ -288,7 +288,7 @@ $(function(){
 	</div>
 	<script type="text/javascript">
         // trigger extension
-        ace.require("ace/ext/language_tools");
+        var langTools = ace.require("ace/ext/language_tools");
         var editor = ace.edit("editor");
         editor.session.setMode("ace/mode/mysql");
         editor.setTheme("ace/theme/github");
@@ -356,6 +356,17 @@ $(function(){
 				end : end
 			});
 		};
+
+        $.post('${path}/sql/autocompleteTable',{},function(data, status, xhr){
+            if(data.code == 200){
+                langTools.addCompleter({
+                    getCompletions: function(editor, session, pos, prefix, callback) {
+                        if (prefix.length === 0) { callback(null, []); return }
+                        callback(null,data.value);
+                    }
+                });
+            }
+        });
 	</script>
 </body>
 </html>
