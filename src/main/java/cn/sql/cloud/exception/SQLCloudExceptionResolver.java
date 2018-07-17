@@ -41,7 +41,6 @@ public class SQLCloudExceptionResolver extends SimpleMappingExceptionResolver {
 				PrintWriter writer = response.getWriter();
 				writer.println(SQLCloudUtils.object2JSON(error));
 				writer.flush();
-				writer.close();
 			} catch (IOException e) {
 				logger.error(e.getMessage());
 			}

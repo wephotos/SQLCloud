@@ -1,6 +1,7 @@
 package cn.sql.cloud.web;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.utils.SQLCloudConfig;
@@ -47,9 +49,9 @@ public class SQLCloudFilter implements Filter {
 		HttpServletResponse response = (HttpServletResponse)rsp;
 		request.setCharacterEncoding("UTF-8");
 		response.setCharacterEncoding("UTF-8");
-		HttpSession session = request.getSession();
+		HttpSession session = request.getSession(true);
 		String servletPath = request.getServletPath();
-		logger.info("servletPath ->" + servletPath);
+		
 		for(String mapping:excludeMapping) {
 			if(servletPath.contains(mapping)) {
 				chain.doFilter(req, rsp);
@@ -57,8 +59,22 @@ public class SQLCloudFilter implements Filter {
 			}
 		}
 		User user = WEBUtils.getSessionUser(session);
+		
 		if(user == null) {
-			response.sendRedirect(request.getContextPath() + "/views/login.jsp");
+			String xrw = request.getHeader("X-Requested-With");//X-Requested-With: XMLHttpRequest
+			if ("XMLHttpRequest".equals(xrw)) {
+				try {
+					response.setHeader("session-status", "timeout");
+					SQLResponse timeout = SQLResponse.build().setCode(502).setMessage("会话超时");
+					PrintWriter writer = response.getWriter();
+					writer.println(SQLCloudUtils.object2JSON(timeout));
+					writer.flush();
+				} catch (IOException e) {
+					logger.error(e.getMessage());
+				}
+			}else {
+				response.sendRedirect(request.getContextPath() + "/views/login.jsp");
+			}
 			return;
 		}
 		String jdbcName = WEBUtils.getSessionJdbcName(session);
