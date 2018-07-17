@@ -33,5 +33,23 @@ public interface ISQL {
 	 * @return
 	 */
 	String getSQLColumns(String database, String tableName);
+	
+	/**
+	 * 每页默认条数100
+	 * @return 条数
+	 */
+	default int getPageSize() {
+		return 100;
+	}
+	
+	/**
+	 * 将SQL添加分页语句
+	 * @param sql
+	 * @param pageNo 页码 [1,2,3,...]
+	 * @return
+	 */
+	default String pageSQL(String sql, int pageNo) {
+		throw new java.lang.UnsupportedOperationException("分页方法未实现");
+	}
 
 }

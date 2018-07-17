@@ -59,6 +59,16 @@ html,body{
 
 <script type="text/javascript">
 $(function(){
+	//为String添加endsWith 方法
+	String.prototype.endsWith = function(text){
+		if(!text){
+			return false;
+		}
+		if(text.length > this.length){
+			return false;
+		}
+		return this.substr(this.length - text.length) === text;
+	}
 	var tableTree;
 	//ztree setting
 	var setting = {
@@ -87,12 +97,32 @@ $(function(){
 					}
 					var columns = data.value.map(function(column){
 						return {
+							id:column.columnName,
 							name:column.columnName + "("+column.columnType+")",
-							comment:column.columnComment
+							comment:column.columnComment,
+							nodeType:'column'
 						};
 					});
 					tableTree.addNodes(table,columns);
 				},"json");
+			},
+			onClick: function(event, treeId, treeNode){//单击插入编辑器光标处
+				var cursor = editor.selection.getCursor();
+				var upText = editor.session.getTextRange({start:{row:cursor.row,column:0},end:cursor}).toUpperCase().trim();
+				var insertText = treeNode.id;
+				if(upText){
+					var digit = upText.charAt(upText.length-1);
+					if(digit !== ',' && !upText.endsWith("SELECT") && !upText.endsWith("FROM")){
+						insertText = ", " + insertText;
+					}
+				}
+				editor.insert(insertText);
+			},
+			onRightClick:function(event, treeId, treeNode){//实现右键菜单
+				if(treeNode.nodeType !== 'table'){
+					return false;
+				}
+				
 			}
 		}
 	};
@@ -125,14 +155,14 @@ $(function(){
 		if(!sql.replace(/^\s+\n+\r+/,'')){
 			return false;
 		}
+		var that = this;
+		$(this).addClass("disabled").css("pointer-events","none");
 		//转成大写，去除开头空格
 		var sql = sql.toUpperCase().replace(/^\s+/,'');
 		$.post('${path}/sql/execute',{sql:sql},function(data, status, xhr){
+			emptyConsoleTabs();
 			if(data.code == 200){
 				var results = data.value;
-				if(results.length > 0){
-					emptyConsoleTabs();
-				}
 				$.each(results,function(index, result){
 					var console = newConsoleTab(index);
 					if(result.type == 'query'){
@@ -144,13 +174,14 @@ $(function(){
 					}
 				});
 			}else{
-				$("#console").html(data.message);
+				newConsoleTab(0).html(data.message);
 			}
+			$(that).removeClass("disabled").css("pointer-events","auto");
 		},"json");
 	});
 	
 	//根据查询结果动态输出表格
-	function dynamicTable(mapQuery, console){
+	function dynamicTable(mapQuery, $console){
 		var table = $("#tableModel").clone().attr("id",new Date().getTime());
 		var columnRow = table.find("thead tr");
 		columnRow.append("<th>序号</th>");
@@ -162,13 +193,24 @@ $(function(){
 		$.each(mapQuery.results,function(i,item){
 			var dataRow = $("<tr></tr>");
 			dataRow.append("<td>"+(i+1)+"</td>");
-			$.each(mapQuery.columnNames,function(index,columnName){  
+			$.each(mapQuery.columnNames,function(index,columnName){
 				var content = item[columnName];
-				dataRow.append("<td data-toggle='popover' data-placement='top' data-content='"+(content?content:"")+"'>"+(content?content:"(Null)")+"</td>");
+				if(content === true){
+					content = "TRUE";
+				}else if(content === false){
+					content = "FALSE";
+				}else if(content === null){
+					content = "(Null)";
+				}
+				var popover = "";
+				if(content != '(Null)' && content){
+					popover = " data-toggle='popover' data-placement='top' data-content='" + content + "' ";
+				}
+				dataRow.append("<td" + popover + ">"+content+"</td>");
 			});
 			tbody.append(dataRow);
 		});
-		console.html(table);
+		$console.html(table);
 		//Enable popovers everywhere
 		$('td[data-toggle="popover"]').popover();
 		$("div.popover").css("pointer-events","none");
@@ -186,22 +228,11 @@ $(function(){
 	}
 	//清空控制台选项卡 
 	function emptyConsoleTabs(){
-		$('td[data-toggle="popover"]').popover('dispose');
 		$("#consoleTabs").empty();
 		$("#consoleTabContent").empty();
+		$('td[data-toggle="popover"]').popover('dispose');
 	}
-	
-	//为String原型提供 startWith 方法
-	String.prototype.startsWith=function(str){
-		if(!str){
-			return false;
-		}
-		if(this.substr(0,str.length) == str){
-			return true;
-		}else{
-			return false;
-		}
-	}
+
 	//点击其它区域 隐藏 popover
 	$(document).on("click",function(event){
 		if(!$(event.target).hasClass("popover-body")){
@@ -251,7 +282,7 @@ $(function(){
 	</div>
 	<div style="display: none;">
 		<table id="tableModel" class="table table-bordered table-hover table-sm">
-			<thead class="thead-light"><tr></tr></thead>
+			<thead class="thead-light position-static"><tr></tr></thead>
 			<tbody></tbody>
 		</table>
 	</div>
@@ -275,46 +306,56 @@ $(function(){
         	//光标行 
         	var line = this.selection.getCursor().row;
         	//结束位置 
-        	var end = {row:lines,column:0};
+        	var end = {
+        		row:lines,
+        		column:0
+        	};
         	for(var i=line;i<lines;i++){
-	        	var lineRange = {
-	        				start:{
-	        					row:i,
-	        					column:0
-	        				},
-	        				end:{
-	        					row:i+1,
-	        					column:0
-	        				}
-	        			};
-	        	var lineText = this.session.getTextRange(lineRange);
-	        	if(!lineText.replace(/^\s+/,'')){
-	        		return "";
-	        	}
-	        	if(lineText.indexOf(';') > -1){
-	        		end = {row:i+1,column:0};
-	        		break;
-	        	}
-        	}
-        	var start = {row:0,column:0};
-        	for(var i=line;i>0;i--){
-        		var lineRange = {
-        				start:{
-        					row:i-1,
-        					column:0
-        				},
-        				end:{
-        					row:i,
-        					column:0
-        				}
-        			};
-	        	var lineText = this.session.getTextRange(lineRange);
-	        	if(lineText.indexOf(';') > -1){
-	        		start = {row:i,column:0};
-	        	}
-        	}
-        	return this.session.getTextRange({start:start, end:end});
-        }
+				var lineRange = {
+					start : {
+						row : i,
+						column : 0
+					},
+					end : {
+						row : i + 1,
+						column : 0
+					}
+				};
+				var lineText = this.session.getTextRange(lineRange);
+				if (!lineText.replace(/^\s+/, '')) {
+					return "";
+				}
+				if (lineText.indexOf(';') > -1) {
+					end = lineRange.end;
+					break;
+				}
+			}
+			var start = {
+				row : 0,
+				column : 0
+			};
+			for (var i = line; i > 0; i--) {
+				var lineRange = {
+					start : {
+						row : i - 1,
+						column : 0
+					},
+					end : {
+						row : i,
+						column : 0
+					}
+				};
+				var lineText = this.session.getTextRange(lineRange);
+				if (lineText.indexOf(';') > -1) {
+					start = lineRange.end;
+					break;
+				}
+			}
+			return this.session.getTextRange({
+				start : start,
+				end : end
+			});
+		};
 	</script>
 </body>
 </html>

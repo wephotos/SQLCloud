@@ -62,9 +62,9 @@ public class SQLRunner {
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
-			statement = conn.prepareStatement(sql);
+			statement = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			statement.setFetchSize(MAX_FETCH_SIZE);
 			rs = statement.executeQuery();
-			rs.setFetchSize(MAX_FETCH_SIZE);
 			return JDBCMapper.resultSet2QueryResult(rs);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());

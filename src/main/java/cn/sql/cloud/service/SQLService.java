@@ -79,7 +79,8 @@ public class SQLService {
 				continue;
 			}
 			if(SQLCloudUtils.isQuerySQL(single)) {
-				results.add(executeQuery(single));
+				ISQL mysql = SQLManager.getSQL();
+				results.add(executeQuery(mysql.pageSQL(single, 1)));
 			}else {
 				results.add(executeUpdate(single));
 			}

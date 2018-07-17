@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
+import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.utils.SQLCloudConfig;
 import cn.sql.cloud.utils.SQLCloudUtils;
@@ -79,7 +80,11 @@ public class SQLCloudFilter implements Filter {
 		}
 		String jdbcName = WEBUtils.getSessionJdbcName(session);
 		if(jdbcName != null) {
-			JDBCManager.holderJdbcInfo(user.getUsername(), jdbcName);
+			try {
+				JDBCManager.holderJdbcInfo(user.getUsername(), jdbcName);
+			}catch (SQLCloudException e) {
+				WEBUtils.setSessionJdbcName(session, null);
+			}
 		}
 		chain.doFilter(request, rsp);
 		

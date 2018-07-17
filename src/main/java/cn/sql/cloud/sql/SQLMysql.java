@@ -42,4 +42,13 @@ public class SQLMysql implements ISQL {
 		return "select column_name,data_type,column_type,column_comment from information_schema.columns where table_schema='"+database+"' and table_name='"+tableName+"'";
 	}
 
+	@Override
+	public String pageSQL(String sql, int pageNo) {
+		if(pageNo < 1) {
+			throw new IllegalArgumentException("The page number can't be less than 1");
+		}
+		int start = (pageNo - 1) * getPageSize();
+		return "SELECT * FROM (" + sql + ") pageTable LIMIT " + start + "," + getPageSize();
+	}
+
 }
