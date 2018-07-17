@@ -1,17 +1,21 @@
 package cn.sql.cloud.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.Column;
 import cn.sql.cloud.entity.JDBCInfo;
-import cn.sql.cloud.entity.MapQuery;
+import cn.sql.cloud.entity.QueryResult;
+import cn.sql.cloud.entity.SQLResult;
 import cn.sql.cloud.entity.Table;
+import cn.sql.cloud.entity.UpdateResult;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.jdbc.SQLRunner;
 import cn.sql.cloud.sql.ISQL;
 import cn.sql.cloud.sql.SQLManager;
+import cn.sql.cloud.utils.SQLCloudUtils;
 
 /**
  * SQL业务
@@ -48,7 +52,7 @@ public class SQLService {
 	 * @param sql
 	 * @return
 	 */
-	public MapQuery executeQuery(String sql) {
+	public QueryResult executeQuery(String sql) {
 		return SQLRunner.executeMapQuery(sql);
 	}
 
@@ -57,7 +61,25 @@ public class SQLService {
 	 * @param sql
 	 * @return
 	 */
-	public int executeUpdate(String sql) {
+	public UpdateResult executeUpdate(String sql) {
 		return SQLRunner.executeUpdate(sql);
+	}
+	
+	/**
+	 * 执行SQL，多条以分号分隔
+	 * @param sql
+	 * @return
+	 */
+	public List<SQLResult> execute(String sql) {
+		List<SQLResult> results = new ArrayList<SQLResult>();
+		String[] sqls = SQLCloudUtils.splitSQL(sql);
+		for(String single:sqls) {
+			if(SQLCloudUtils.isQuerySQL(single)) {
+				results.add(executeQuery(single));
+			}else {
+				results.add(executeUpdate(single));
+			}
+		}
+		return results;
 	}
 }

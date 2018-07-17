@@ -34,7 +34,23 @@ html,body{
 	display: inline-block;
 }
 .sql-toolbar > li label{
-	padding:8px;
+	padding:5px;
+	margin: 0px;
+}
+.nav-link{
+	padding: 0.1rem 0.5rem;
+}
+.table{
+	width:auto;
+	table-layout: fixed;
+}
+.table td,table th{
+	text-align:left;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	max-width: 300px;
+	text-align: center;
 }
 </style>
 
@@ -53,7 +69,7 @@ $(function(){
 			rootPId: -1
 		},
 		callback: {
-			beforeExpand: function(treeId, table){
+			beforeExpand: function(treeId, table){//展开表格加载列
 				if($.isArray(table.children)){
 					return true;
 				}
@@ -68,6 +84,7 @@ $(function(){
 			}
 		}
 	};
+	//加载表格
 	$.post("${path}/sql/tables",{},function(data, status, xhr){
 		var zNodes = data.value.map(function(item){
 			return {
@@ -87,23 +104,24 @@ $(function(){
 		if(!sql.replace(/^\s+/,'')){
 			return false;
 		}
-		var url;
-		var sql = sql.toUpperCase().replace(/^\s+/,'');//转成大写，去除开头空格
-		if(sql.startWith('SELECT')){
-			url = '${path}/sql/executeQuery';
-		}else if(sql.startWith('UPDATE')){
-			url = '${path}/sql/executeUpdate';
-		}else{
-			$("#console").html(sql + ' is not supported');
-			return false;
-		}
-		$.post(url,{sql:sql},function(data, status, xhr){
+		//转成大写，去除开头空格
+		var sql = sql.toUpperCase().replace(/^\s+/,'');
+		$.post('${path}/sql/execute',{sql:sql},function(data, status, xhr){
 			if(data.code == 200){
-				if(sql.startWith('SELECT')){
-					dynamicTable(data.value);
-				}else{
-					$("#console").html("execute successfully. " + data.value + " row updated");
+				var results = data.value;
+				if(results.length > 0){
+					emptyConsoleTabs();
 				}
+				$.each(results,function(index, result){
+					var console = newConsoleTab(index);
+					if(result.type == 'query'){
+						dynamicTable(result, console);
+					}else if(result.type == 'update'){
+						console.html("execute successfully. " + result.updateCount + " row updated");
+					}else{
+						//
+					}
+				});
 			}else{
 				$("#console").html(data.message);
 			}
@@ -111,25 +129,41 @@ $(function(){
 	});
 	
 	//根据查询结果动态输出表格
-	function dynamicTable(mapQuery){
+	function dynamicTable(mapQuery, console){
 		var table = $("#tableModel").clone().attr("id",new Date().getTime());
 		var columnRow = table.find("thead tr");
 		$.each(mapQuery.columnNames,function(index,columnName){
-			columnRow.append("<td>"+columnName+"</td>");
+			columnRow.append("<th title='"+columnName+"'>"+columnName+"</th>");
 		});
 		var tbody = table.find("tbody");
 		$.each(mapQuery.results,function(i,item){
 			var dataRow = $("<tr></tr>");
 			$.each(mapQuery.columnNames,function(index,columnName){
-				dataRow.append("<td>"+item[columnName]+"</td>");
+				dataRow.append("<td title='"+item[columnName]+"'>"+item[columnName]+"</td>");
 			});
 			tbody.append(dataRow);
 		});
-		$("#console").html(table);
+		console.html(table);
+	}
+	
+	//新建一个控制台选项卡 并返回 ,index不可重复
+	function newConsoleTab(index){
+		var tabId = "console-" + (index+1);
+		var tab = $('<li class="nav-item"><a class="nav-link '+(index == 0 ? 'active' : '')+' id="'+tabId+'-tab" data-toggle="tab" href="#'+tabId+'" role="tab">'+tabId+'</a></li>');
+		var tabContent = $('<div class="tab-pane fade '+(index == 0 ? 'show active' : '')+'" id="'+tabId+'" role="tabpanel"></div>');
+		
+		$("#consoleTabs").append(tab);
+		$("#consoleTabContent").append(tabContent);
+		return tabContent;
+	}
+	//清空控制台选项卡 
+	function emptyConsoleTabs(){
+		$("#consoleTabs").empty();
+		$("#consoleTabContent").empty();
 	}
 	
 	//为String原型提供 startWith 方法
-	String.prototype.startWith=function(str){
+	String.prototype.startsWith=function(str){
 		if(!str){
 			return false;
 		}
@@ -151,7 +185,7 @@ $(function(){
   		<div class="col-9" style="padding: 0px 5px;">
   			<div class="container-fluid">
   				<div class="row" style="height: 60%;">
-  					<div class="col" style="box-sizing: border-box;padding-top: 50px;padding-bottom: 5px;">
+  					<div class="col" style="box-sizing: border-box;padding-top: 36px;padding-bottom: 5px;">
   					  <nav class="bg-light" style="position: absolute;left: 0px;top: 0px;width: 100%;">
 	  					  <ul class="sql-toolbar">
 	  					  	<li><label id="executeSQL" class="btn bg-light text-primary"><span class="glyphicon glyphicon-play"></span> 运行</label></li>
@@ -160,9 +194,11 @@ $(function(){
 				      <textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>
 				    </div>
   				</div>
-  				<div class="row bg-white border border-secondary" style="height: 40%;padding: 5px;">
-  					<div id="console" class="col">
-				      
+  				<div class="row bg-white border-top border-secondary" style="height: 40%;">
+  					<div class="col">
+				      <ul class="nav nav-tabs" id="consoleTabs" role="tablist" style="position: absolute;left: 0px;top:0px;"></ul>
+				      <div style="clear: both;"></div>
+				      <div class="tab-content" id="consoleTabContent" style="overflow: auto;height: 100%;padding-top: 30px;"></div>
 				    </div>
   				</div>
   			</div>

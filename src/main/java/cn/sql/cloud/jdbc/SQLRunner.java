@@ -9,7 +9,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.sql.cloud.entity.MapQuery;
+import cn.sql.cloud.entity.QueryResult;
+import cn.sql.cloud.entity.UpdateResult;
 import cn.sql.cloud.exception.SQLCloudException;
 
 /**
@@ -56,7 +57,7 @@ public class SQLRunner {
 	 * @param beanClass
 	 * @return
 	 */
-	public static MapQuery executeMapQuery(String sql){
+	public static QueryResult executeMapQuery(String sql){
 		Connection conn = JDBCManager.getConnection();
 		PreparedStatement statement = null;
 		ResultSet rs = null;
@@ -64,7 +65,7 @@ public class SQLRunner {
 			statement = conn.prepareStatement(sql);
 			rs = statement.executeQuery();
 			rs.setFetchSize(MAX_FETCH_SIZE);
-			return JDBCMapper.resultSet2MapQuery(rs);
+			return JDBCMapper.resultSet2QueryResult(rs);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);
@@ -83,12 +84,13 @@ public class SQLRunner {
 	 * @param sql
 	 * @return
 	 */
-	public static int executeUpdate(String sql) {
+	public static UpdateResult executeUpdate(String sql) {
 		Connection conn = JDBCManager.getConnection();
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(sql);
-			return stmt.executeUpdate();
+			int updateCount = stmt.executeUpdate();
+			return new UpdateResult().setUpdateCount(updateCount);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);

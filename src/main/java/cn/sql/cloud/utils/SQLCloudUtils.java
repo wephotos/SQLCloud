@@ -38,6 +38,8 @@ public final class SQLCloudUtils {
 	private static SQLCloudConfig SQL_CLOUD_CONFIG = null;
 	//下划线
 	public static final String UNDERLINE = "_";
+	//查询开头关键字
+	public static final String SELECT = "SELECT";
 	/**
 	 * 将字符串MD5
 	 * @param value
@@ -180,5 +182,22 @@ public final class SQLCloudUtils {
 		}
 		return columnNames;
 	}
+	
+	/**
+	 * 分割多条SQL语句
+	 * @param sql
+	 * @return
+	 */
+	public static String[] splitSQL(String sql) {
+		return sql.split(";");
+	}
 
+	/**
+	 * 判断SQL是不是查询语句
+	 * @param sql
+	 * @return
+	 */
+	public static boolean isQuerySQL(String sql) {
+		return sql.trim().toUpperCase().startsWith(SELECT);
+	}
 }

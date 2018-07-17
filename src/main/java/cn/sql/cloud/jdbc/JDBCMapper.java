@@ -21,7 +21,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.sql.cloud.entity.MapQuery;
+import cn.sql.cloud.entity.QueryResult;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.utils.SQLCloudUtils;
 
@@ -61,7 +61,7 @@ public class JDBCMapper {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static MapQuery resultSet2MapQuery(ResultSet rs) {
+	public static QueryResult resultSet2QueryResult(ResultSet rs) {
 		try {
 			List<Map<String,Object>> results = new ArrayList<Map<String,Object>>();
 			while(rs.next()) {
@@ -74,10 +74,10 @@ public class JDBCMapper {
 				columnNames.add(rsmd.getColumnLabel(i));
 			}
 			
-			MapQuery mapQuery = new MapQuery();
-			mapQuery.setResults(results);
-			mapQuery.setColumnNames(columnNames);
-			return mapQuery;
+			QueryResult queryResult = new QueryResult();
+			queryResult.setResults(results);
+			queryResult.setColumnNames(columnNames);
+			return queryResult;
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);

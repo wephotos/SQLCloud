@@ -1,6 +1,5 @@
 package cn.sql.cloud.entity;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +12,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class MapQuery implements Serializable {
+public class QueryResult implements SQLResult {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
 	//列名
 	private List<String> columnNames = Collections.emptyList();
 	//数据
@@ -36,6 +31,11 @@ public class MapQuery implements Serializable {
 	public void setResults(List<Map<String, Object>> results) {
 		this.results = results;
 	}
+	@Override
+	public String getType() {
+		return QUERY;
+	}
+	
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
