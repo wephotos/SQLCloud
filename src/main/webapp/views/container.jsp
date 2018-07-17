@@ -188,7 +188,12 @@ $(function(){
   					<div class="col" style="box-sizing: border-box;padding-top: 36px;padding-bottom: 5px;">
   					  <nav class="bg-light" style="position: absolute;left: 0px;top: 0px;width: 100%;">
 	  					  <ul class="sql-toolbar">
-	  					  	<li><label id="executeSQL" class="btn bg-light text-primary"><span class="glyphicon glyphicon-play"></span> 运行</label></li>
+	  					  	<li>
+	  					  		<label id="executeSQL" class="btn bg-light text-primary">
+	  					  			<span class="glyphicon glyphicon-play"></span> 
+	  					  			<span style="vertical-align: middle;">运行</span>
+	  					  		</label>
+	  					  	</li>
 	  					  </ul>
   					  </nav>
 				      <textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>
