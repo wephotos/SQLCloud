@@ -3,6 +3,7 @@ package cn.sql.cloud.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.Column;
@@ -74,6 +75,9 @@ public class SQLService {
 		List<SQLResult> results = new ArrayList<SQLResult>();
 		String[] sqls = SQLCloudUtils.splitSQL(sql);
 		for(String single:sqls) {
+			if(StringUtils.isBlank(single)) {
+				continue;
+			}
 			if(SQLCloudUtils.isQuerySQL(single)) {
 				results.add(executeQuery(single));
 			}else {
