@@ -14,7 +14,9 @@
 <script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"></script>
 <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-
+	<!-- load ace -->
+<script src="https://cdn.bootcss.com/ace/1.3.3/ace.js"></script>
+<script src="https://cdn.bootcss.com/ace/1.3.3/ext-language_tools.js"></script>
 <style type="text/css">
 html,body{
 	height: 100%;
@@ -100,7 +102,8 @@ $(function(){
 	
 	//执行SQL
 	$("#executeSQL").on("click",function(){
-		var sql = $("textarea[name=sql]").val();
+		//var sql = $("textarea[name=sql]").val();
+        var sql = editor.getValue();
 		if(!sql.replace(/^\s+/,'')){
 			return false;
 		}
@@ -196,7 +199,8 @@ $(function(){
 	  					  	</li>
 	  					  </ul>
   					  </nav>
-				      <textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>
+				      <%--textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>--%>
+						<pre id="editor" class="ace_editor" style="min-height:400px"></pre>
 				    </div>
   				</div>
   				<div class="row bg-white border-top border-secondary" style="height: 40%;">
@@ -216,5 +220,19 @@ $(function(){
 			<tbody></tbody>
 		</table>
 	</div>
+	<script type="text/javascript">
+        // trigger extension
+        ace.require("ace/ext/language_tools");
+        var editor = ace.edit("editor");
+        editor.session.setMode("ace/mode/mysql");
+        editor.setTheme("ace/theme/terminal");
+        editor.setFontSize(18);
+        // enable autocompletion and snippets
+        editor.setOptions({
+            enableBasicAutocompletion: true,
+            enableSnippets: true,
+            enableLiveAutocompletion: true
+        });
+	</script>
 </body>
 </html>
