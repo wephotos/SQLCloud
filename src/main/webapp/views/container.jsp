@@ -10,6 +10,7 @@
 <link href="https://cdn.bootcss.com/zTree.v3/3.5.33/css/metroStyle/metroStyle.min.css" rel="stylesheet">
 
 <script src="https://cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript" src="${path}/resources/js/common.js"></script>
 <script src="https://cdn.bootcss.com/zTree.v3/3.5.33/js/jquery.ztree.all.min.js"></script>
 <script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"></script>
 <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
@@ -81,6 +82,9 @@ $(function(){
 					return true;
 				}
 				$.post("${path}/sql/columns",{tableName:table.id},function(data, status, xhr){
+					if(data.code != 200){
+						return false;
+					}
 					var columns = data.value.map(function(column){
 						return {
 							name:column.columnName + "("+column.columnType+")",
@@ -142,18 +146,25 @@ $(function(){
 	function dynamicTable(mapQuery, console){
 		var table = $("#tableModel").clone().attr("id",new Date().getTime());
 		var columnRow = table.find("thead tr");
+		columnRow.append("<th>序号</th>");
 		$.each(mapQuery.columnNames,function(index,columnName){
-			columnRow.append("<th title='"+columnName+"'>"+columnName+"</th>");
+			var aliasName = columnName.split('.')[2];
+			columnRow.append("<th title='"+aliasName+"'>"+aliasName+"</th>");
 		});
 		var tbody = table.find("tbody");
 		$.each(mapQuery.results,function(i,item){
 			var dataRow = $("<tr></tr>");
-			$.each(mapQuery.columnNames,function(index,columnName){
-				dataRow.append("<td title='"+item[columnName]+"'>"+item[columnName]+"</td>");
+			dataRow.append("<td>"+(i+1)+"</td>");
+			$.each(mapQuery.columnNames,function(index,columnName){  
+				var content = item[columnName];
+				dataRow.append("<td data-toggle='popover' data-placement='top' data-content='"+(content?content:"")+"'>"+content+"</td>");
 			});
 			tbody.append(dataRow);
 		});
 		console.html(table);
+		//Enable popovers everywhere
+		$('td[data-toggle="popover"]').popover();
+		$("div.popover").css("pointer-events","none");
 	}
 	
 	//新建一个控制台选项卡 并返回 ,index不可重复
@@ -168,6 +179,7 @@ $(function(){
 	}
 	//清空控制台选项卡 
 	function emptyConsoleTabs(){
+		$('td[data-toggle="popover"]').popover('dispose');
 		$("#consoleTabs").empty();
 		$("#consoleTabContent").empty();
 	}
@@ -183,6 +195,15 @@ $(function(){
 			return false;
 		}
 	}
+	//点击其它区域 隐藏 popover
+	$(document).on("click",function(event){
+		if(!$(event.target).hasClass("popover-body")){
+			$('td[data-toggle="popover"]').popover('hide');
+			if($(event.target).attr("data-toggle") == 'popover'){
+				$(event.target).popover('toggle');
+			}
+		}
+	});
 });
 </script>
 </head>

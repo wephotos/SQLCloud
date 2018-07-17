@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,8 @@ public class JDBCMapper {
 			ResultSetMetaData rsmd = rs.getMetaData();
 			int columnCount = rsmd.getColumnCount();
 			for (int i = 1; i <= columnCount; i++) {
-				columnNames.add(rsmd.getColumnLabel(i));
+				String[] fullName = { rsmd.getTableName(i), rsmd.getColumnName(i), rsmd.getColumnLabel(i) };
+				columnNames.add(StringUtils.join(fullName, "."));
 			}
 			
 			QueryResult queryResult = new QueryResult();
@@ -109,7 +111,9 @@ public class JDBCMapper {
 			for (int i = 1; i <= columnCount; i++) {
 				String columnName = rsmd.getColumnLabel(i);
 				if(bean instanceof Map) {
-					((Map<String, Object>) bean).put(columnName, rs.getObject(i));
+					String[] fullName = { rsmd.getTableName(i), rsmd.getColumnName(i), columnName };
+					String key = StringUtils.join(fullName, ".");
+					((Map<String, Object>) bean).put(key, rs.getObject(i));
 					continue;
 				}
 				for (Field field : fields) {
