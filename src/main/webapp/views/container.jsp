@@ -182,7 +182,7 @@ $(function(){
 <body>
 	<div class="container-fluid">
 	  <div class="row main">
-	    <div class="col-3 bg-light">
+	    <div class="col-3 bg-light" style="overflow: auto;">
 	    	<ul id="tableTree" class="ztree"></ul>
 	    </div>
   		<div class="col-9" style="padding: 0px 5px;">
