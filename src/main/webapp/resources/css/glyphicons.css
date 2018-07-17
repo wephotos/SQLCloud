@@ -26,3 +26,9 @@
 .glyphicon-play:before {
   content: "\e072";
 }
+.glyphicon-off:before {
+  content: "\e017";
+}
+.glyphicon-cloud:before {
+  content: "\2601";
+}

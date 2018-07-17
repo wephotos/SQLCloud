@@ -126,7 +126,10 @@ main,.tab-content{
 	  <div class="collapse navbar-collapse" id="navbarNavDropdown">
 	    <ul class="navbar-nav">
 	      <li class="nav-item active">
-	        <a class="nav-link" href="#" data-toggle="modal" data-target="#JDBCModalCenter">新连接 <span class="sr-only">(current)</span></a>
+	        <a class="nav-link" href="#" data-toggle="modal" data-target="#JDBCModalCenter">
+	        	<span class="glyphicon glyphicon-cloud"></span>
+	        	<span style="vertical-align: middle;">连接</span>
+	        </a>
 	      </li>
 	      <!-- <li class="nav-item dropdown">
 	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -140,7 +143,7 @@ main,.tab-content{
 	      </li> -->
 	    </ul>
 	  </div>
-    <button type="button" class="btn btn-dark" onclick="javascript:location.href='${path}/user/logout'">退出</button>
+      <span class="glyphicon glyphicon-off text-white btn" onclick="javascript:location.href='${path}/user/logout'"></span>
 	</nav>
 	<ul class="nav nav-tabs" id="jdbcTabs" role="tablist"></ul>
 	</header>
