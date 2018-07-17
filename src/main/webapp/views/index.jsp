@@ -26,6 +26,18 @@ $(function(){
 		},"json");
 		return false;
 	});
+	//列出所有JDBC连接
+	(function listJDBC(){
+		$.post("${path}/jdbc/list",{},function(data, status, xhr){
+			if(data.code == 200){
+				$.each(data.value, function(index, jdbc){
+					newTab(jdbc);
+				});
+			}else{
+				alert(data.message);
+			}
+		},"json");
+	})();
 	
 	//创建一个新的SQL操作窗口
 	function newTab(jdbc){
@@ -160,25 +172,25 @@ main,.tab-content{
 	          <div class="form-group row">
 			    <label for="colJdbcNameLabel" class="col-sm-2 col-form-label">连接名</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colJdbcNameLabel" name="name" placeholder="JDBC Name" required="required" value="localhost">
+			      <input type="text" class="form-control" id="colJdbcNameLabel" name="name" placeholder="JDBC Name" required="required" value="jchctest">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colHostLabel" class="col-sm-2 col-form-label">主机</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colHostLabel" name="host" placeholder="Host" required="required" value="127.0.0.1">
+			      <input type="text" class="form-control" id="colHostLabel" name="host" placeholder="Host" required="required" value="172.20.1.199">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colUsernameLabel" class="col-sm-2 col-form-label">用户名</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colUsernameLabel" name="username" placeholder="Username" required="required" value="root">
+			      <input type="text" class="form-control" id="colUsernameLabel" name="username" placeholder="Username" required="required" value="jchctest">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colPasswordLabel" class="col-sm-2 col-form-label">密码</label>
 			    <div class="col-sm-10">
-			      <input type="password" class="form-control" id="colPasswordLabel" name="password" placeholder="Password" required="required" value="root">
+			      <input type="password" class="form-control" id="colPasswordLabel" name="password" placeholder="Password" required="required" value="Jchc20170321">
 			    </div>
 			  </div>
 			  <div class="form-group row">
@@ -190,7 +202,7 @@ main,.tab-content{
 			  <div class="form-group row">
 			    <label for="colDatabaseLabel" class="col-sm-2 col-form-label">数据库</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colDatabaseLabel" name="database" placeholder="Database" required="required" value="sqlcloud">
+			      <input type="text" class="form-control" id="colDatabaseLabel" name="database" placeholder="Database" required="required" value="jchc_supplier">
 			    </div>
 			  </div>
 	      </div>
