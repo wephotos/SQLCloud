@@ -200,7 +200,7 @@ $(function(){
 	  					  </ul>
   					  </nav>
 				      <%--textarea rows="" cols="" name="sql" style="width: 100%;height: 100%;resize: none;"></textarea>--%>
-						<pre id="editor" class="ace_editor" style="min-height:400px"></pre>
+						<pre id="editor" class="ace_editor" style="height: 100%;width: 100%;"></pre>
 				    </div>
   				</div>
   				<div class="row bg-white border-top border-secondary" style="height: 40%;">
@@ -225,7 +225,7 @@ $(function(){
         ace.require("ace/ext/language_tools");
         var editor = ace.edit("editor");
         editor.session.setMode("ace/mode/mysql");
-        editor.setTheme("ace/theme/terminal");
+        editor.setTheme("ace/theme/github");
         editor.setFontSize(18);
         // enable autocompletion and snippets
         editor.setOptions({
