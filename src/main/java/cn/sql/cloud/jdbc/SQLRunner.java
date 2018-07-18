@@ -100,26 +100,5 @@ public class SQLRunner {
 			}
 		}
 	}
-	
-	/**
-	 * 
-	 * @param sql
-	 * @return
-	 */
-	@Deprecated //暂时不要用
-	public static boolean execute(String sql) {
-		Connection conn = JDBCManager.getConnection();
-		PreparedStatement stmt = null;
-		try {
-			stmt = conn.prepareStatement(sql);
-			return stmt.execute();
-		} catch (SQLException e) {
-			logger.error(e.getMessage());
-			throw new SQLCloudException(e);
-		}finally {//关闭 statement
-			if(stmt != null) {
-				try {stmt.close();} catch (SQLException e) {}
-			}
-		}
-	}
+
 }
