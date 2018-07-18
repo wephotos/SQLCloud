@@ -126,16 +126,7 @@ $(function(){
 				trm.css({"left":event.clientX+"px","top":event.clientY+"px"}).slideDown("fast");
 				//打开表 
 				$("#open-table", trm).unbind("click").on("click",function(){
-					var sql = "SELECT * FROM " + treeNode.name + ";\n";
-					var cursor = editor.selection.getCursor();
-					var headText = editor.session.getTextRange({start:{row:0,column:0},end:cursor});
-					var semicolon = "";
-					if(!headText.trim().endsWith(";") && headText){
-						semicolon = ";\n";
-					}
-					editor.insert(semicolon + sql);
-					editor.gotoLine(editor.selection.getCursor().row);
-					executeSQL();
+					executeSQL("SELECT * FROM " + treeNode.name);
 				});
 				//改变表
 				$("#alter-table", trm).unbind("click").on("click",function(){
@@ -168,10 +159,6 @@ $(function(){
 	
 	//执行SQL
 	$("#executeSQL").on("click",function(){
-		executeSQL();
-	});
-	//执行SQL语句
-	function executeSQL(){
 		var range = editor.getSelectionRange();
 		var sql = editor.session.getTextRange(range);
 		//选中 > 光标 > 内容 
@@ -184,10 +171,13 @@ $(function(){
 		if(!sql.replace(/^\s+\n+\r+/,'')){
 			return false;
 		}
+		executeSQL(sql);
+	});
+	//执行SQL语句
+	function executeSQL(sql){
 		var that = this;
 		$(this).addClass("disabled").css("pointer-events","none");
-		//转成大写，去除开头空格
-		var sql = sql.toUpperCase().replace(/^\s+/,'');
+		sql = sql.toUpperCase().replace(/^\s+/,'');//转成大写，去除开头空格
 		$.post('${path}/sql/execute',{sql:sql},function(data, status, xhr){
 			emptyConsoleTabs();
 			if(data.code == 200){
