@@ -229,8 +229,8 @@ $(function(){
 			});
 			tbody.append(dataRow);
 		});
-		
-		var statusbar = $('<ul class="nav nav-tabs bg-secondary text-white" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
+		//bg-secondary text-white
+		var statusbar = $('<ul class="nav nav-tabs bg-light" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
 		statusbar.append('<li class="nav-item" style="font-size:12px;">总条数 '+ mapQuery.total + '行 已提取  '+mapQuery.results.length+' 行</li>');
 		var tableContent = $("<div style='height:100%;overflow: auto;'></div>");
 		$console.html(tableContent.append(table));
