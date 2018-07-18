@@ -96,6 +96,27 @@ public class JDBCMapper {
 	@SuppressWarnings("unchecked")
 	public static <T> T resultSet2Bean(ResultSet rs, Class<T> beanClass) {
 		try {
+			//数字类型直接返回第一列
+			if(SQLCloudUtils.isNumberClass(beanClass)) {
+				Number number = (Number)rs.getObject(1);
+				return (T)SQLCloudUtils.castNumberByClass(number, beanClass);
+			}
+			//基本类型返回第一列
+			if (beanClass.isPrimitive()) {
+				if(boolean.class == beanClass || Boolean.class == beanClass) {
+					return (T)rs.getObject(1);
+				}
+				if(char.class == beanClass || Character.class == beanClass) {
+					String chars = rs.getString(1);
+					if(chars == null) {
+						return null;
+					}else if(chars.length() > 0) {
+						return (T)(Object)chars.toCharArray()[0];
+					}else {
+						return (T)(Object)'\0';
+					}
+				}
+			}
 			T bean;
 			Field[] fields = null;
 			if(Map.class == beanClass) {
@@ -111,9 +132,15 @@ public class JDBCMapper {
 			for (int i = 1; i <= columnCount; i++) {
 				String columnName = rsmd.getColumnLabel(i);
 				if(bean instanceof Map) {
+					Object value;
+					if("[B".equals(rsmd.getColumnClassName(i))) {
+						value = "byte[]";
+					}else {
+						value = rs.getObject(i);
+					}
 					String[] fullName = { rsmd.getTableName(i), rsmd.getColumnName(i), columnName };
 					String key = StringUtils.join(fullName, ".");
-					((Map<String, Object>) bean).put(key, rs.getObject(i));
+					((Map<String, Object>) bean).put(key, value);
 					continue;
 				}
 				for (Field field : fields) {
