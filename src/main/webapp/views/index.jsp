@@ -107,7 +107,8 @@ $(function(){
     border: 0;
 }
 html,body{
-	height: 99%;
+	height: 100%;
+	overflow:hidden;
 }
 main,.tab-content{
 	height: 100%;

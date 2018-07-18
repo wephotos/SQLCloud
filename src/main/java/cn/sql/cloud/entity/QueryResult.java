@@ -13,11 +13,25 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  *
  */
 public class QueryResult implements SQLResult {
-
-	//列名
+	/**
+	 * 查询记录总条数
+	 */
+	private int total;
+	/**
+	 * 列名
+	 */
 	private List<String> columnNames = Collections.emptyList();
-	//数据
+	/**
+	 * 数据
+	 */
 	private List<Map<String, Object>> results = Collections.emptyList();
+	
+	public int getTotal() {
+		return total;
+	}
+	public void setTotal(int total) {
+		this.total = total;
+	}
 	
 	public List<String> getColumnNames() {
 		return columnNames;

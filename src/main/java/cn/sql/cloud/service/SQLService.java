@@ -80,7 +80,11 @@ public class SQLService {
 			}
 			if(SQLCloudUtils.isQuerySQL(single)) {
 				ISQL mysql = SQLManager.getSQL();
-				results.add(executeQuery(mysql.pageSQL(single, 1)));
+				QueryResult queryResult = executeQuery(mysql.pageSQL(single, 1));
+				String countSQL = SQLCloudUtils.parseCountSQL(single);
+				List<QueryResult> queryTotal = SQLRunner.executeQuery(countSQL, QueryResult.class);
+				queryResult.setTotal(queryTotal.get(0).getTotal());
+				results.add(queryResult);
 			}else {
 				results.add(executeUpdate(single));
 			}

@@ -122,7 +122,32 @@ $(function(){
 				if(treeNode.nodeType !== 'table'){
 					return false;
 				}
-				
+				var trm = $("#table-right-menu");
+				trm.css({"left":event.clientX+"px","top":event.clientY+"px"}).slideDown("fast");
+				//打开表 
+				$("#open-table", trm).unbind("click").on("click",function(){
+					var sql = "SELECT * FROM " + treeNode.name + ";\n";
+					var cursor = editor.selection.getCursor();
+					var headText = editor.session.getTextRange({start:{row:0,column:0},end:cursor});
+					var semicolon = "";
+					if(!headText.trim().endsWith(";") && headText){
+						semicolon = ";\n";
+					}
+					editor.insert(semicolon + sql);
+					editor.gotoLine(editor.selection.getCursor().row);
+					executeSQL();
+				});
+				//改变表
+				$("#alter-table", trm).unbind("click").on("click",function(){
+					alert("开发中...");
+				});
+				//点击菜单以外区域隐藏 
+				$(document.body).bind("mousedown",function mousedown(event){
+					if (event.target.id !== 'table-right-menu') {
+						trm.fadeOut("fast");
+						$("body").unbind("mousedown", mousedown);
+					}
+				});
 			}
 		}
 	};
@@ -143,6 +168,10 @@ $(function(){
 	
 	//执行SQL
 	$("#executeSQL").on("click",function(){
+		executeSQL();
+	});
+	//执行SQL语句
+	function executeSQL(){
 		var range = editor.getSelectionRange();
 		var sql = editor.session.getTextRange(range);
 		//选中 > 光标 > 内容 
@@ -178,7 +207,7 @@ $(function(){
 			}
 			$(that).removeClass("disabled").css("pointer-events","auto");
 		},"json");
-	});
+	}
 	
 	//根据查询结果动态输出表格
 	function dynamicTable(mapQuery, $console){
@@ -210,7 +239,17 @@ $(function(){
 			});
 			tbody.append(dataRow);
 		});
-		$console.html(table);
+		
+		var statusbar = $('<ul class="nav nav-tabs bg-secondary text-white" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
+		statusbar.append('<li class="nav-item" style="font-size:12px;">总条数 '+ mapQuery.total + '行 已提取  '+mapQuery.results.length+' 行</li>');
+		var tableContent = $("<div style='height:100%;overflow: auto;'></div>");
+		$console.html(tableContent.append(table));
+		$console.append(statusbar);
+		$console.css({
+			"height":"100%",
+			"padding-bottom":"20px",
+			"box-sizing":"border-box"
+		});
 		//Enable popovers everywhere
 		$('td[data-toggle="popover"]').popover();
 		$("div.popover").css("pointer-events","none");
@@ -253,7 +292,7 @@ $(function(){
 	    </div>
   		<div class="col-9" style="padding: 0px 5px;">
   			<div class="container-fluid">
-  				<div class="row" style="height: 60%;">
+  				<div class="row" style="height: 55%;">
   					<div class="col" style="box-sizing: border-box;padding-top: 36px;padding-bottom: 5px;">
   					  <nav class="bg-light" style="position: absolute;left: 0px;top: 0px;width: 100%;">
 	  					  <ul class="sql-toolbar">
@@ -269,7 +308,7 @@ $(function(){
 						<pre id="editor" class="ace_editor" style="height: 100%;width: 100%;"></pre>
 				    </div>
   				</div>
-  				<div class="row bg-white border-top border-secondary" style="height: 40%;">
+  				<div class="row bg-white border-top border-secondary" style="height: 45%;">
   					<div class="col">
 				      <ul class="nav nav-tabs" id="consoleTabs" role="tablist" style="position: absolute;left: 0px;top:0px;"></ul>
 				      <div style="clear: both;"></div>
@@ -285,6 +324,13 @@ $(function(){
 			<thead class="thead-light position-static"><tr></tr></thead>
 			<tbody></tbody>
 		</table>
+	</div>
+	<!-- 表格右键菜单 -->
+	<div id="table-right-menu" class="bg-dark" style="position: absolute;display: none;">
+		<div class="btn-group-vertical btn-group-sm" role="group" style="padding: 10px;">
+			<button id="open-table" type="button" class="btn btn-dark">打 开 表</button>
+  			<button id="alter-table" type="button" class="btn btn-dark">改 变 表</button>
+		</div>
 	</div>
 	<script type="text/javascript">
         // trigger extension
@@ -322,9 +368,9 @@ $(function(){
 					}
 				};
 				var lineText = this.session.getTextRange(lineRange);
-				if (!lineText.replace(/^\s+/, '')) {
+				/* if (!lineText.replace(/^\s+/, '')) {
 					return "";
-				}
+				} */
 				if (lineText.indexOf(';') > -1) {
 					end = lineRange.end;
 					break;
@@ -357,12 +403,17 @@ $(function(){
 			});
 		};
 
-        $.post('${path}/sql/autocompleteTable',{},function(data, status, xhr){
+        $.post('${path}/sql/tables',{},function(data, status, xhr){
             if(data.code == 200){
                 langTools.addCompleter({
                     getCompletions: function(editor, session, pos, prefix, callback) {
-                        if (prefix.length === 0) { callback(null, []); return }
-                        callback(null,data.value);
+                        if (prefix.length === 0) {
+                        	callback(null, []);
+                        }else{
+	                        callback(null,data.value.map(function(table){
+	                        	return {name: table.tableName, value: table.tableName, score: 10000, meta: "table"};
+	                        }));
+                        }
                     }
                 });
             }

@@ -7,6 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Stack;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -38,8 +39,10 @@ public final class SQLCloudUtils {
 	private static SQLCloudConfig SQL_CLOUD_CONFIG = null;
 	//下划线
 	public static final String UNDERLINE = "_";
-	//查询开头关键字
-	public static final String SELECT = "SELECT";
+	//SQL SELECT
+	public static final String SQL_SELECT = "SELECT";
+	//SQL FROM
+	public static final String SQL_FROM = "FROM";
 	/**
 	 * 将字符串MD5
 	 * @param value
@@ -198,6 +201,38 @@ public final class SQLCloudUtils {
 	 * @return
 	 */
 	public static boolean isQuerySQL(String sql) {
-		return sql.trim().toUpperCase().startsWith(SELECT);
+		return sql.trim().toUpperCase().startsWith(SQL_SELECT);
 	}
+	
+	/**
+	 * 将查询SQL解析成 count(1) .<br>
+	 * select column1,column2,... from table,... select count(1) from table,...
+	 * @param sql
+	 * @return
+	 */
+	public static String parseCountSQL(String sql) {
+		Stack<String> selectStack = new Stack<String>();
+		char[] digits = sql.toCharArray();
+		int fromIndex = 0;
+		for (int i = 0; i < digits.length; i++) {
+			char digit = digits[i];
+			if (Character.isWhitespace(digit) || digit == ',' || digit == '(' || digit == ')') {
+				String word = sql.substring(fromIndex, i);
+				if (SQL_SELECT.equalsIgnoreCase(word)) {
+					selectStack.push(word);
+				}else if (SQL_FROM.equalsIgnoreCase(word)) {
+					if (selectStack.size() == 1) {
+						break;
+					} else if (selectStack.size() > 1) {
+						selectStack.pop();
+					} else {
+						throw new SQLCloudException("SQL语法错误 ->" + sql);
+					}
+				}
+				fromIndex = i + 1;
+			}
+		}
+		return SQL_SELECT.concat(" COUNT(1) TOTAL ").concat(sql.substring(fromIndex));
+	}
+
 }
