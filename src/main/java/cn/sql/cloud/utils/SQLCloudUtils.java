@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.Stack;
 
 import javax.xml.bind.JAXBContext;
@@ -156,34 +153,42 @@ public final class SQLCloudUtils {
 	}
 	
 	/**
-	 * 从查询语句中解析出字段 如果使用  <code>*</code> 查询返回空集合
-	 * @param querySQL 查询SQL
+	 * 转换数字类型
+	 * @param number 原始类型
+	 * @param tc 目标类型
 	 * @return
 	 */
-	public static List<String> parseColumnNames(String querySQL){
-		Objects.requireNonNull(querySQL);
-		List<String> columnNames = new ArrayList<String>();
-		String SQL = querySQL.toUpperCase();
-		if(SQL.startsWith("SELECT")) {
-			int fromIndex = SQL.indexOf(" FROM ");
-			String trimNames = SQL.substring(7, fromIndex).trim();
-			if(trimNames.contains("*")) {
-				return columnNames;
-			}else {
-				String[] names = trimNames.split(",");
-				for(String name:names) {
-					String trimName = name.trim();
-					if(trimName.contains(" ")) {
-						columnNames.add(trimName.split("\\s+")[1]);
-					}else {
-						columnNames.add(trimName);
-					}
-				}
-			}
-		}else {
-			throw new SQLCloudException("querySQL 必须以 SELECT 开头. ->" + querySQL);
+	public static Number castNumberByClass(Number number, Class<?> tc) {
+		if(Byte.class == tc || byte.class == tc) {
+			return number.byteValue();
 		}
-		return columnNames;
+		if(Short.class == tc || short.class == tc) {
+			return number.shortValue();
+		}
+		if(Integer.class == tc || int.class == tc) {
+			return number.intValue();
+		}
+		if(Long.class == tc || long.class == tc) {
+			return number.longValue();
+		}
+		if(Float.class == tc || float.class == tc) {
+			return number.floatValue();
+		}
+		if(Double.class == tc || double.class == tc) {
+			return number.doubleValue();
+		}
+		throw new ClassCastException("java.lang.Number Cannot cast " + tc.getName());
+	}
+	
+	/**
+	 * 判断是否是数字类型
+	 * @param cls
+	 * @return
+	 */
+	public static boolean isNumberClass(Class<?> cls) {
+		return (Byte.class == cls || byte.class == cls || Short.class == cls || short.class == cls
+				|| Integer.class == cls || int.class == cls || Long.class == cls || long.class == cls
+				|| Float.class == cls || float.class == cls || Double.class == cls || double.class == cls);
 	}
 	
 	/**
