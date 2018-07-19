@@ -16,3 +16,13 @@ $(function(){
 	    }
 	});
 });
+//为String添加endsWith 方法
+String.prototype.endsWith = function(text){
+	if(!text){
+		return false;
+	}
+	if(text.length > this.length){
+		return false;
+	}
+	return this.substr(this.length - text.length) === text;
+}
