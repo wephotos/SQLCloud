@@ -1,5 +1,8 @@
 package cn.sql.cloud.entity;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 /**
  * 列对象
  * @author TQ
@@ -15,6 +18,10 @@ public class Column {
 	private String columnType;
 	//列注释
 	private String columnComment;
+	//可空?
+	private boolean nullable;
+	//主键?
+	private boolean keyPrimary;
 	
 	public String getColumnName() {
 		return columnName;
@@ -40,10 +47,22 @@ public class Column {
 	public void setColumnComment(String columnComment) {
 		this.columnComment = columnComment;
 	}
+	
+	public boolean isNullable() {
+		return nullable;
+	}
+	public void setNullable(boolean nullable) {
+		this.nullable = nullable;
+	}
+	public boolean isKeyPrimary() {
+		return keyPrimary;
+	}
+	public void setKeyPrimary(boolean keyPrimary) {
+		this.keyPrimary = keyPrimary;
+	}
 	@Override
 	public String toString() {
-		return "Column [columnName=" + columnName + ", dataType=" + dataType + ", columnType=" + columnType
-				+ ", columnComment=" + columnComment + "]";
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
 	}
 	
 }

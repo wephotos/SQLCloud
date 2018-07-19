@@ -39,7 +39,14 @@ public class SQLMysql implements ISQL {
 
 	@Override
 	public String getSQLColumns(String database, String tableName) {
-		return "select column_name,data_type,column_type,column_comment from information_schema.columns where table_schema='"+database+"' and table_name='"+tableName+"'";
+		return "SELECT COLUMN_NAME,DATA_TYPE,COLUMN_TYPE,COLUMN_COMMENT,"
+				+ "CASE IS_NULLABLE WHEN 'NO' THEN FALSE ELSE TRUE END NULLABLE,"
+				+ "CASE (SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE "
+				+ "TABLE_SCHEMA = INFORMATION_SCHEMA.COLUMNS.TABLE_SCHEMA "
+				+ "AND TABLE_NAME = INFORMATION_SCHEMA.COLUMNS.TABLE_NAME "
+				+ "AND COLUMN_NAME=INFORMATION_SCHEMA.COLUMNS.COLUMN_NAME AND CONSTRAINT_NAME='PRIMARY') "
+				+ "WHEN 'PRIMARY' THEN TRUE ELSE FALSE END KEY_PRIMARY FROM INFORMATION_SCHEMA.COLUMNS "
+				+ "WHERE TABLE_SCHEMA='" + database + "' AND TABLE_NAME='" + tableName + "'";
 	}
 
 	@Override
