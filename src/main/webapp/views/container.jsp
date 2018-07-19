@@ -96,9 +96,15 @@ $(function(){
 						return false;
 					}
 					var columns = data.value.map(function(column){
+						var PKNullable = "";
+						if(column.nullable === true){
+							PKNullable = ",Nullable";
+						}else if(column.keyPrimary === true){
+							PKNullable = ",PK";
+						}
 						return {
 							id:column.columnName,
-							name:column.columnName + "("+column.columnType+")",
+							name:column.columnName + "," + column.columnType + PKNullable,
 							comment:column.columnComment,
 							nodeType:'column'
 						};
