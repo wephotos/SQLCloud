@@ -39,7 +39,7 @@ public class SQLRunner {
 			rs = statement.executeQuery();
 			return JDBCMapper.resultSet2List(rs, beanClass);
 		} catch (SQLException e) {
-			logger.error(e.getMessage());
+			logger.error(e.getMessage() + ". SQL->" + sql);
 			throw new SQLCloudException(e);
 		}finally {//关闭 ResultSet,statement
 			if(rs != null) {
@@ -67,7 +67,7 @@ public class SQLRunner {
 			rs = statement.executeQuery();
 			return JDBCMapper.resultSet2QueryResult(rs);
 		} catch (SQLException e) {
-			logger.error(e.getMessage());
+			logger.error(e.getMessage() + ". SQL->" + sql);
 			throw new SQLCloudException(e);
 		}finally {//关闭 ResultSet,statement
 			if(rs != null) {
@@ -92,7 +92,7 @@ public class SQLRunner {
 			int updateCount = stmt.executeUpdate();
 			return new UpdateResult().setUpdateCount(updateCount);
 		} catch (SQLException e) {
-			logger.error(e.getMessage());
+			logger.error(e.getMessage() + ". SQL->" + sql);
 			throw new SQLCloudException(e);
 		}finally {//关闭 statement
 			if(stmt != null) {
