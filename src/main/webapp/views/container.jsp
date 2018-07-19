@@ -15,7 +15,7 @@
 <script src="https://cdn.bootcss.com/jquery.serializeJSON/2.9.0/jquery.serializejson.min.js"></script>
 <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-	<!-- load ace -->
+<!-- load ace -->
 <script src="https://cdn.bootcss.com/ace/1.3.3/ace.js"></script>
 <script src="https://cdn.bootcss.com/ace/1.3.3/ext-language_tools.js"></script>
 <style type="text/css">
@@ -55,6 +55,9 @@ html,body{
 	max-width: 300px;
 	text-align: center;
 }
+.ztree li {
+	margin: 2px 1px;
+}
 </style>
 
 <script type="text/javascript">
@@ -72,7 +75,8 @@ $(function(){
 								isParent : true,
 								type: node.type,
 								name : node.name,
-								comment:""
+								comment:"click use database",
+								icon:"${path}/resources/img/database_21px.png"
 							};
 						});
 					} else {
@@ -82,7 +86,17 @@ $(function(){
 				}
 			},
 			view : {
-				showLine : false
+				showLine : false,
+				selectedMulti:false,
+				fontCss:function(treeId, treeNode){
+					var nodes = objectTree.getSelectedNodes();
+					for(var i=0;i<nodes.length;i++){
+						if(nodes[i] == treeNode){
+							return {"font-weight":"bold","color":"blue"};
+						}
+					}
+					return {"font-weight":"normal","color":"inherit"};
+				}
 			},
 			data : {
 				simpleData : {
@@ -149,7 +163,7 @@ $(function(){
 						return true;
 					}
 				},
-				onClick : function(event, treeId, treeNode) {//单击插入编辑器光标处
+				onClick : function(event, treeId, treeNode) {
 					//切换数据源 
 					if(treeNode.type == 'DATABASE'){
 						$.post("${path}/jdbc/useDatabase",{database:treeNode.name},function(data, status, xhr){
@@ -157,10 +171,17 @@ $(function(){
 								alert("切换数据库失败:" + data.message);
 							}else{
 								aceAddCompleterTables(treeNode.name);
+								/**设置当前节点为选中样式**/
+								objectTree = $.fn.zTree.getZTreeObj("objectTree");
+								var nodes = objectTree.getNodesByFilter(function(node){return node.level == 0;});
+								for(var i=0;i<nodes.length;i++){
+									objectTree.updateNode(nodes[i]);
+								}
 							}
 						},"json");
 						return false;
 					}
+					//单击插入编辑器光标处
 					var cursor = editor.selection.getCursor();
 					var upText = editor.session.getTextRange({
 						start : {
@@ -244,8 +265,7 @@ $(function(){
 						if (result.type == 'query') {
 							dynamicTable(result, console);
 						} else if (result.type == 'update') {
-							console.html("execute successfully. "
-									+ result.updateCount + " row updated");
+							console.html("execute successfully. " + result.updateCount + " row updated");
 						} else {
 							//
 						}
@@ -278,6 +298,8 @@ $(function(){
 						content = "FALSE";
 					} else if (content === null) {
 						content = "(Null)";
+					} else {
+						content = content.toString();
 					}
 					content = content.replace(/</g,'&lt;').replace(/>/g,'&gt;');
 					var popover = "";
@@ -454,28 +476,28 @@ $(function(){
 			});
 		};
 		//添加用于自动补全的表
-		var tables = [];
+		var ace_tables = [];
 		function aceAddCompleterTables(database){
 			$.post('${path}/sql/tables',{database:database},function(data, status, xhr){
 	            if(data.code == 200){
-	                tables = data.value;
+	            	ace_tables = data.value;
+	                if(window.isAceAddCompleterTables){
+	    				return false;
+	    			}
+	                langTools.addCompleter({
+	                    getCompletions: function(editor, session, pos, prefix, callback) {
+	                        if (prefix.length === 0) {
+	                        	callback(null, []);
+	                        }else{
+	                            callback(null,ace_tables.map(function(table){
+	                            	return {name: table.tableName, value: table.tableName, score: 10000, meta: "table"};
+	                            }));
+	                        }
+	                    }
+	                });
+	    			window.isAceAddCompleterTables = true;
 	            }
-	        });
-			if(window.isAceAddCompleterTables){
-				return false;
-			}
-			langTools.addCompleter({
-                getCompletions: function(editor, session, pos, prefix, callback) {
-                    if (prefix.length === 0) {
-                    	callback(null, []);
-                    }else{
-                        callback(null,tables.map(function(table){
-                        	return {name: table.tableName, value: table.tableName, score: 10000, meta: "table"};
-                        }));
-                    }
-                }
-            });
-			window.isAceAddCompleterTables = true;
+	        },"json");
 		}
 		aceAddCompleterTables("");
 	</script>
