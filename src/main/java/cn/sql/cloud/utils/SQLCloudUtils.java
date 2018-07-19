@@ -206,7 +206,25 @@ public final class SQLCloudUtils {
 	 * @return
 	 */
 	public static boolean isQuerySQL(String sql) {
-		return sql.trim().toUpperCase().startsWith(SQL_SELECT);
+		return com.mysql.jdbc.StringUtils.startsWithIgnoreCaseAndWs(stripComments(sql), "S");
+	}
+	
+	/**
+	 * 判断SQL是否以SELECT开头
+	 * @param sql
+	 * @return
+	 */
+	public static boolean startsWithSelect(String sql) {
+		return com.mysql.jdbc.StringUtils.startsWithIgnoreCaseAndWs(stripComments(sql), "SELECT");
+	}
+	
+	/**
+	 * 移除SQL中的注释
+	 * @param sql
+	 * @return
+	 */
+	private static String stripComments(String sql) {
+		return com.mysql.jdbc.StringUtils.stripComments(sql, "'\"", "'\"", true, false, true, true);
 	}
 	
 	/**
