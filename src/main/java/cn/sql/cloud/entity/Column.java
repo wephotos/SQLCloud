@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class Column {
+public class Column implements SQLObject {
 
 	//列名
 	private String columnName;
@@ -23,6 +23,14 @@ public class Column {
 	//主键?
 	private boolean keyPrimary;
 	
+	@Override
+	public String getType() {
+		return COLUMN;
+	}
+	@Override
+	public String getName() {
+		return columnName;
+	}
 	public String getColumnName() {
 		return columnName;
 	}

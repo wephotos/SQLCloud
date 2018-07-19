@@ -26,6 +26,11 @@ public class SQLMysql implements ISQL {
 	public String getDirverClass() {
 		return Driver.class.getName();
 	}
+	
+	@Override
+	public String getSQLDatabases() {
+		return "SELECT SCHEMA_NAME NAME FROM INFORMATION_SCHEMA.SCHEMATA";
+	}
 
 	@Override
 	public String getURL(String host, int port, String database) {
@@ -34,7 +39,8 @@ public class SQLMysql implements ISQL {
 
 	@Override
 	public String getSQLTables(String database) {
-		return "select table_name,create_time,update_time,table_comment from information_schema.tables where table_schema='"+database+"' and table_type='base table'";
+		return "select table_schema data_base,table_name,create_time,update_time,table_comment "
+				+ "from information_schema.tables where table_schema='" + database + "'";
 	}
 
 	@Override

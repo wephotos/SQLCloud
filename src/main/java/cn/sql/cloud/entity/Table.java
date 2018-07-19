@@ -1,6 +1,5 @@
 package cn.sql.cloud.entity;
 
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.List;
@@ -13,12 +12,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class Table implements Serializable {
+public class Table implements SQLObject {
 
-	/**
-	 * serialVersionUID
-	 */
-	private static final long serialVersionUID = 519486833758977379L;
 	//表名
 	private String tableName;
 	//创建时间
@@ -27,9 +22,21 @@ public class Table implements Serializable {
 	private Timestamp updateTime;
 	//表注释
 	private String tableComment;
+	//数据库名
+	private String database;
+	//表类型
+	private String tableType;
 	//列集合
 	private List<Column> columns = Collections.emptyList();
 	
+	@Override
+	public String getType() {
+		return TABLE;
+	}
+	@Override
+	public String getName() {
+		return tableName;
+	}
 	public String getTableName() {
 		return tableName;
 	}
@@ -60,6 +67,18 @@ public class Table implements Serializable {
 
 	public void setTableComment(String tableComment) {
 		this.tableComment = tableComment;
+	}
+	public String getDatabase() {
+		return database;
+	}
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+	public String getTableType() {
+		return tableType;
+	}
+	public void setTableType(String tableType) {
+		this.tableType = tableType;
 	}
 	public List<Column> getColumns() {
 		return columns;

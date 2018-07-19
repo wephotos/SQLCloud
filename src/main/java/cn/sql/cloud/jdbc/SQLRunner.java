@@ -31,6 +31,7 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static <E> List<E> executeQuery(String sql, Class<E> beanClass){
+		logger.info("executeQuery SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
 		PreparedStatement statement = null;
 		ResultSet rs = null;
@@ -58,6 +59,7 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static QueryResult executeMapQuery(String sql){
+		logger.info("executeMapQuery SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
 		PreparedStatement statement = null;
 		ResultSet rs = null;
@@ -85,6 +87,7 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static UpdateResult executeUpdate(String sql) {
+		logger.info("executeUpdate SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
 		PreparedStatement stmt = null;
 		try {

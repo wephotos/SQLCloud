@@ -1,14 +1,16 @@
 package cn.sql.cloud.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.Column;
-import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.entity.Database;
 import cn.sql.cloud.entity.QueryResult;
+import cn.sql.cloud.entity.SQLObject;
 import cn.sql.cloud.entity.SQLResult;
 import cn.sql.cloud.entity.Table;
 import cn.sql.cloud.entity.UpdateResult;
@@ -26,25 +28,56 @@ import cn.sql.cloud.utils.SQLCloudUtils;
 @Service("sqlService")
 public class SQLService {
 	
+	
 	/**
-	 * 获取当前连接下的所有表
+	 * 获取数据库对象树顶级节点
 	 * @return
 	 */
-	public List<Table> tables() {
-		JDBCInfo jdbc = JDBCManager.getHolderJdbcInfo();
+	public List<? extends SQLObject> topTreeNodes(){
+		List<Database> databases = databases();
+		if(databases.size() > 0) {
+			return databases;
+		}else {
+			return tables(null);
+		}
+	}
+	
+	/**
+	 * 获取当前所有数据库
+	 * @return
+	 */
+	public List<Database> databases(){
 		ISQL sql = SQLManager.getSQL();
-		String sqlTables = sql.getSQLTables(jdbc.getDatabase());
+		String sqlDatabases = sql.getSQLDatabases();
+		if(StringUtils.isBlank(sqlDatabases)) {
+			return Collections.emptyList();
+		}else {
+			return SQLRunner.executeQuery(sqlDatabases, Database.class);
+		}
+	}
+	
+	/**
+	 * 获取当前连接下的所有表
+	 * @param 数据库
+	 * @return
+	 */
+	public List<Table> tables(String database) {
+		ISQL sql = SQLManager.getSQL();
+		if(StringUtils.isBlank(database)) {
+			database = JDBCManager.getHolderJdbcInfo().getDatabase();
+		}
+		String sqlTables = sql.getSQLTables(database);
 		return SQLRunner.executeQuery(sqlTables, Table.class);
 	}
 	
 	/**
 	 * 获取表中所有的列
-	 * @param tableName
+	 * @param database 数据库
+	 * @param tablename 表名
 	 * @return
 	 */
-	public List<Column> columns(String tableName){
-		JDBCInfo jdbc = JDBCManager.getHolderJdbcInfo();
-		String sqlColumns = SQLManager.getSQL().getSQLColumns(jdbc.getDatabase(), tableName);
+	public List<Column> columns(String database, String tablename){
+		String sqlColumns = SQLManager.getSQL().getSQLColumns(database, tablename);
 		return SQLRunner.executeQuery(sqlColumns, Column.class);
 	}
 	

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,34 +32,44 @@ public class SQLController {
 
     @Resource
     private SQLService sqlService;
-
+    
+    /**
+     * 获取SQL对象树
+     * @param name
+     * @param type
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping("/topTreeNodes")
+    public SQLResponse topTreeNodes() {
+    	logger.debug("sql/topTreeNodes");
+    	return SQLResponse.build(this.sqlService.topTreeNodes());
+    }
     /**
      * 获取数据库中的所有表
-     *
-     * @param session
+     * @param database 数据库名
      * @return
      */
     @ResponseBody
     @RequestMapping("/tables")
-    public SQLResponse tables(HttpSession session) {
+    public SQLResponse tables(String database) {
         logger.debug("sql/tables");
-        return SQLResponse.build(this.sqlService.tables());
+        return SQLResponse.build(this.sqlService.tables(database));
     }
 
     /**
      * 获取表的列信息
      *
-     * @param session
-     * @param tableName
+     * @param database 数据库名
+     * @param tableName 表名
      * @return
      */
     @ResponseBody
     @RequestMapping("/columns")
-    public SQLResponse columns(HttpSession session, String tableName) {
+    public SQLResponse columns(String database, String tableName) {
         logger.debug("sql/columns tableName -> {}", tableName);
-        return SQLResponse.build(this.sqlService.columns(tableName));
+        return SQLResponse.build(this.sqlService.columns(database, tableName));
     }
-
 
     /**
      * 执行 SELECT 语句
@@ -85,7 +94,7 @@ public class SQLController {
     @ResponseBody
     @RequestMapping("/executeUpdate")
     public SQLResponse executeUpdate(String sql) {
-        logger.debug("sql/ executeUpdate -> {}", sql);
+        logger.debug("sql/executeUpdate -> {}", sql);
         UpdateResult updateResult = this.sqlService.executeUpdate(sql);
         return SQLResponse.build(updateResult);
     }

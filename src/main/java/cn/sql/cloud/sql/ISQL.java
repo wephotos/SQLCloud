@@ -20,6 +20,14 @@ public interface ISQL {
 	String getURL(String host, int port, String database);
 	
 	/**
+	 * 获取查询数据库的语句
+	 * @return
+	 */
+	default String getSQLDatabases() {
+		return null;
+	}
+	
+	/**
 	 * 获取查询数据库中表的语句 Columns[tableName,createTime,updateTime,tableComment]
 	 * @param database
 	 * @return

@@ -43,4 +43,13 @@ public class JDBCInfoService {
 	public List<JDBCInfo> list(String username){
 		return JDBCManager.getJdbcInfoList(username);
 	}
+
+	/**
+	 * 切换数据库
+	 * @param database
+	 */
+	public void useDatabase(String database) {
+		JDBCInfo jdbc = JDBCManager.getHolderJdbcInfo();
+		jdbc.setDatabase(database);
+	}
 }

@@ -78,4 +78,16 @@ public class JDBCController {
 		String username = WEBUtils.getSessionUser(session).getUsername();
 		return SQLResponse.build(jdbcInfoService.list(username));
 	}
+	
+	/**
+	 * 使用指定数据库
+	 * @param database
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/useDatabase")
+	public SQLResponse useDatabase(String database) {
+		jdbcInfoService.useDatabase(database);
+		return SQLResponse.build();
+	}
 }
