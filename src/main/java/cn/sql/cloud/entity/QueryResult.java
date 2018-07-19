@@ -16,7 +16,7 @@ public class QueryResult implements SQLResult {
 	/**
 	 * 查询记录总条数
 	 */
-	private int total;
+	private long total;
 	/**
 	 * 列名
 	 */
@@ -26,10 +26,14 @@ public class QueryResult implements SQLResult {
 	 */
 	private List<Map<String, Object>> results = Collections.emptyList();
 	
-	public int getTotal() {
-		return total;
+	public long getTotal() {
+		if(total > 0) {
+			return total;
+		}else {
+			return results.size();
+		}
 	}
-	public void setTotal(int total) {
+	public void setTotal(long total) {
 		this.total = total;
 	}
 	
