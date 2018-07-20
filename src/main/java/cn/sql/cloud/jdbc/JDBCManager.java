@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.exception.JDBCNotFoundException;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.sql.ISQL;
 import cn.sql.cloud.sql.SQLManager;
@@ -79,8 +80,9 @@ public final class JDBCManager {
 	 * 将指定的连接信息绑定到当前线程
 	 * @param username
 	 * @param jdbcName
+	 * @throws JDBCNotFoundException 
 	 */
-	public static void holderJdbcInfo(String username, String jdbcName) {
+	public static void holderJdbcInfo(String username, String jdbcName) throws JDBCNotFoundException {
 		List<JDBCInfo> list = getJdbcInfoList(username);
 		JDBCInfo jdbcInfo = null;
 		for(JDBCInfo jdbc:list) {
@@ -90,7 +92,7 @@ public final class JDBCManager {
 			}
 		}
 		if(jdbcInfo == null) {
-			throw new SQLCloudException("获取不到JDBC连接信息. jdbcName -> " + jdbcName);
+			throw new JDBCNotFoundException("获取不到JDBC连接信息. jdbcName -> " + jdbcName);
 		}else {
 			JDBC_INFO_HOLDER.remove();
 			JDBC_INFO_HOLDER.set(jdbcInfo);
@@ -180,9 +182,9 @@ public final class JDBCManager {
 			CONN_HOLDER.remove();
 			try {
 				conn.close();
-				logger.info("closed jdbc Connection -> " + conn.toString());
+				logger.info("closed Connection:{}, isClosed:{} ", conn.toString(), conn.isClosed());
 			} catch (SQLException e) {
-				logger.error(e.getMessage());
+				logger.error("close jdbc Connection failed:" + e.getMessage());
 				throw new SQLCloudException(e);
 			}
 		}
