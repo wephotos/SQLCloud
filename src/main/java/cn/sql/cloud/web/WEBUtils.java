@@ -54,4 +54,13 @@ public class WEBUtils {
 	public static String getSessionJdbcName(HttpSession session) {
 		return (String)session.getAttribute(SESSION_KEY_JDBC_NAME);
 	}
+	
+	/**
+	 * 清空Session属性并使Session失效
+	 * @param session
+	 */
+	public static void sessionInvalidate(HttpSession session) {
+		session.removeAttribute(SESSION_KEY_USER);
+		session.removeAttribute(SESSION_KEY_JDBC_NAME);
+	}
 }

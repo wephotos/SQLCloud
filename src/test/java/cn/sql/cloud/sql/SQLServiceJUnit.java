@@ -8,7 +8,11 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.entity.QueryResult;
+import cn.sql.cloud.entity.UpdateResult;
+import cn.sql.cloud.exception.JDBCNotFoundException;
 import cn.sql.cloud.jdbc.JDBCManager;
+import cn.sql.cloud.jdbc.SQLRunner;
 import cn.sql.cloud.service.SQLService;
 
 /**
@@ -26,14 +30,14 @@ public class SQLServiceJUnit {
 	
 	//设置数据源
 	@org.junit.Before
-	public void initJdbcInfo() {
-		String username = "root", jdbcName = "mysql";
+	public void initJdbcInfo() throws JDBCNotFoundException {
+		String username = "TianQi", jdbcName = "mysql";
 		JDBCInfo jdbcInfo = new JDBCInfo();
-		jdbcInfo.setDatabase("sqlcloud");
-		jdbcInfo.setHost("localhost");
+		jdbcInfo.setDatabase("jchc_supplier");
+		jdbcInfo.setHost("172.20.1.199");
 		jdbcInfo.setName(jdbcName);
-		jdbcInfo.setUsername("root");
-		jdbcInfo.setPassword("root");
+		jdbcInfo.setUsername("jchctest");
+		jdbcInfo.setPassword("Jchc20170321");
 		jdbcInfo.setPort(3306);
 		jdbcInfo.setSqlType(SQLType.MYSQL);
 		JDBCManager.addJdbcInfo(jdbcInfo, username);
@@ -42,6 +46,13 @@ public class SQLServiceJUnit {
 
 	@Test
 	public void executeQuery() {
-		System.out.println(sqlService.executeQuery("select * from user"));
+		//show databases
+		System.err.println("=======================================");
+		UpdateResult updateResult = SQLRunner.executeUpdate("use jchc_oa");
+		System.out.println(updateResult);
+		QueryResult queryResult = SQLRunner.executeMapQuery("select * from b_jchc_file");
+		System.err.println(queryResult);
+		System.err.println("=======================================");
 	}
+
 }
