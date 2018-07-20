@@ -287,9 +287,10 @@ $(function(){
 				columnRow.append("<th title='"+aliasName+"'>" + aliasName + "</th>");
 			});
 			var tbody = table.find("tbody");
+			var dataRowsHtml = [];//表格行HTML数组 
 			$.each(mapQuery.results, function(i, item) {
-				var dataRow = $("<tr></tr>");
-				dataRow.append("<td>" + (i + 1) + "</td>");
+				dataRowsHtml.push("<tr>");
+				dataRowsHtml.push("<td>" + (i + 1) + "</td>");
 				$.each(mapQuery.columnNames,function(index, columnName) {
 					var content = item[columnName];
 					if (content === true) {
@@ -306,10 +307,11 @@ $(function(){
 					if (content != '(Null)' && content) {
 						popover = " data-toggle='popover' data-placement='top' data-content='"+ content + "' ";
 					}
-					dataRow.append("<td" + popover + ">" + content + "</td>");
+					dataRowsHtml.push("<td" + popover + ">" + content + "</td>");
 				});
-				tbody.append(dataRow);
+				dataRowsHtml.push("</tr>");
 			});
+			tbody.html(dataRowsHtml.join(""));
 			//bg-secondary text-white
 			var statusbar = $('<ul class="nav nav-tabs bg-light" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
 			statusbar.append('<li class="nav-item" style="font-size:12px;">总条数 ' + mapQuery.total + '行 已提取  ' + mapQuery.results.length + ' 行</li>');
