@@ -12,7 +12,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class Table implements SQLObject {
+public class Table implements MetaData {
 
 	//表名
 	private String tableName;

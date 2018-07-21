@@ -38,13 +38,13 @@ public class SQLMysql implements ISQL {
 	}
 
 	@Override
-	public String getSQLTables(String database) {
+	public String getSQLTables(String database, String username) {
 		return "select table_schema data_base,table_name,create_time,update_time,table_comment "
 				+ "from information_schema.tables where table_schema='" + database + "'";
 	}
 
 	@Override
-	public String getSQLColumns(String database, String tableName) {
+	public String getSQLColumns(String database, String username, String tableName) {
 		return "SELECT COLUMN_NAME,DATA_TYPE,COLUMN_TYPE,COLUMN_COMMENT,"
 				+ "CASE IS_NULLABLE WHEN 'NO' THEN FALSE ELSE TRUE END NULLABLE,"
 				+ "CASE (SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE "

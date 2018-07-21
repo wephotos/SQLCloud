@@ -7,7 +7,7 @@ import cn.sql.cloud.sql.SQLType;
  * @author TQ
  *
  */
-public class JDBCInfo {
+public class JDBC {
 	
 	/**
 	 * 连接名

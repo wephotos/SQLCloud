@@ -46,6 +46,8 @@ public class UserController {
 	 */
 	@RequestMapping("/logout")
 	public String logout(HttpSession session) {
+		User user = WEBUtils.getSessionUser(session);
+		logger.info("logout -> {}", user.getUsername());
 		WEBUtils.sessionInvalidate(session);
 		return "redirect:/views/login.jsp";
 	}

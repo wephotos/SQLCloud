@@ -3,14 +3,16 @@ package cn.sql.cloud.controller;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.entity.JDBC;
 import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
-import cn.sql.cloud.service.JDBCInfoService;
+import cn.sql.cloud.service.JDBCService;
 import cn.sql.cloud.web.WEBUtils;
 
 /**
@@ -21,9 +23,10 @@ import cn.sql.cloud.web.WEBUtils;
 @Controller
 @RequestMapping(value="/jdbc")
 public class JDBCController {
-	
+	//log
+	final static Logger logger = LoggerFactory.getLogger(JDBCController.class);
 	@Resource
-	private JDBCInfoService jdbcInfoService;
+	private JDBCService jdbcService;
 
 	/**
 	 * 添加一个JDBC连接信息
@@ -33,9 +36,10 @@ public class JDBCController {
 	 */
 	@ResponseBody
 	@RequestMapping("/add")
-	public SQLResponse add(JDBCInfo jdbc, HttpSession session) {
+	public SQLResponse add(JDBC jdbc, HttpSession session) {
 		User user = WEBUtils.getSessionUser(session);
-		jdbcInfoService.add(jdbc, user.getUsername());
+		logger.debug("add user:{},jdbc:{}",user.getUsername(),jdbc.getName());
+		jdbcService.add(jdbc, user.getUsername());
 		WEBUtils.setSessionJdbcName(session, jdbc.getName());
 		return SQLResponse.build();
 	}
@@ -50,7 +54,8 @@ public class JDBCController {
 	@RequestMapping("/remove")
 	public SQLResponse remove(HttpSession session, String jdbcName) {
 		User user = WEBUtils.getSessionUser(session);
-		boolean bool = jdbcInfoService.remove(jdbcName, user.getUsername());
+		logger.debug("remove user:{},jdbc:{}",user.getUsername(),jdbcName);
+		boolean bool = jdbcService.remove(jdbcName, user.getUsername());
 		return SQLResponse.build(bool);
 	}
 	
@@ -63,6 +68,8 @@ public class JDBCController {
 	@ResponseBody
 	@RequestMapping("/holding")
 	public SQLResponse holding(HttpSession session, String jdbcName) {
+		User user = WEBUtils.getSessionUser(session);
+		logger.debug("holding user:{},jdbc:{}",user.getUsername(),jdbcName);
 		WEBUtils.setSessionJdbcName(session, jdbcName);
 		return SQLResponse.build();
 	}
@@ -76,18 +83,22 @@ public class JDBCController {
 	@RequestMapping("/list")
 	public SQLResponse list(HttpSession session) {
 		String username = WEBUtils.getSessionUser(session).getUsername();
-		return SQLResponse.build(jdbcInfoService.list(username));
+		logger.debug("list user:{}",username);
+		return SQLResponse.build(jdbcService.list(username));
 	}
 	
 	/**
 	 * 使用指定数据库
 	 * @param database
+	 * @param session
 	 * @return
 	 */
 	@ResponseBody
 	@RequestMapping("/useDatabase")
-	public SQLResponse useDatabase(String database) {
-		jdbcInfoService.useDatabase(database);
+	public SQLResponse useDatabase(String database, HttpSession session) {
+		User user = WEBUtils.getSessionUser(session);
+		logger.debug("useDatabase user:{}, database:{}",user.getUsername(), database);
+		jdbcService.useDatabase(database);
 		return SQLResponse.build();
 	}
 }

@@ -11,13 +11,13 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.DigestUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mysql.jdbc.StringUtils;
 
 import cn.sql.cloud.entity.User;
 import cn.sql.cloud.exception.SQLCloudException;
@@ -139,7 +139,7 @@ public final class SQLCloudUtils {
 		StringBuilder camelCase = new StringBuilder();
 		camelCase.append(words[0].toLowerCase());
 		for(int i = 1; i < words.length; i++) {
-			if(StringUtils.isNotBlank(words[i])) {
+			if(!StringUtils.isEmptyOrWhitespaceOnly(words[i])) {
 				String lowerCase = words[i].toLowerCase();
 				char first = lowerCase.charAt(0);
 				if(first >= 97 && first <= 122) {
@@ -206,7 +206,8 @@ public final class SQLCloudUtils {
 	 * @return
 	 */
 	public static boolean isQuerySQL(String sql) {
-		return com.mysql.jdbc.StringUtils.startsWithIgnoreCaseAndWs(stripComments(sql), "S");
+		String noCommentSql = stripComments(sql);
+		return StringUtils.startsWithIgnoreCaseAndWs(noCommentSql, new String[] {"S","EXPLAIN"}) > -1;
 	}
 	
 	/**
@@ -215,7 +216,7 @@ public final class SQLCloudUtils {
 	 * @return
 	 */
 	public static boolean startsWithSelect(String sql) {
-		return com.mysql.jdbc.StringUtils.startsWithIgnoreCaseAndWs(stripComments(sql), "SELECT");
+		return StringUtils.startsWithIgnoreCaseAndWs(stripComments(sql), "SELECT");
 	}
 	
 	/**
@@ -224,7 +225,7 @@ public final class SQLCloudUtils {
 	 * @return
 	 */
 	private static String stripComments(String sql) {
-		return com.mysql.jdbc.StringUtils.stripComments(sql, "'\"", "'\"", true, false, true, true);
+		return StringUtils.stripComments(sql, "'\"", "'\"", true, false, true, true);
 	}
 	
 	/**

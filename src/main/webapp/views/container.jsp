@@ -66,7 +66,7 @@ $(function(){
 	var setting = {
 		async:{
 			enable: true,
-			url: "${path}/sql/topTreeNodes",
+			url: "${path}/meta/topTreeNodes",
 			dataFilter:function(treeId, parentNode, data) {
 				if(data.code == 200){
 					return data.value.map(function(node){
@@ -117,8 +117,8 @@ $(function(){
 					if ($.isArray(node.children)) {
 						return true;
 					}
-					if (node.type == 'DATABASE') {
-						$.post("${path}/sql/tables", {
+					if (node.type == 'database') {
+						$.post("${path}/meta/tables", {
 							database : node.name
 						}, function(data, status, xhr) {
 							if (data.code != 200) {
@@ -135,8 +135,8 @@ $(function(){
 							});
 							objectTree.addNodes(node, tables);
 						}, "json");
-					} else if (node.type == 'TABLE') {
-						$.post("${path}/sql/columns", {
+					} else if (node.type == 'table') {
+						$.post("${path}/meta/columns", {
 							database : node.database,
 							tableName : node.name
 						}, function(data, status, xhr) {
@@ -165,7 +165,7 @@ $(function(){
 				},
 				onClick : function(event, treeId, treeNode) {
 					//切换数据源 
-					if(treeNode.type == 'DATABASE'){
+					if(treeNode.type == 'database'){
 						$.post("${path}/jdbc/useDatabase",{database:treeNode.name},function(data, status, xhr){
 							if(data.code != 200){
 								alert("切换数据库失败:" + data.message);
@@ -204,7 +204,7 @@ $(function(){
 					if(!treeNode){
 						return false;
 					}
-					if (treeNode.type != 'TABLE') {
+					if (treeNode.type != 'table') {
 						return false;
 					}
 					var trm = $("#table-right-menu");
@@ -480,7 +480,7 @@ $(function(){
 		//添加用于自动补全的表
 		var ace_tables = [];
 		function aceAddCompleterTables(database){
-			$.post('${path}/sql/tables',{database:database},function(data, status, xhr){
+			$.post('${path}/meta/tables',{database:database},function(data, status, xhr){
 	            if(data.code == 200){
 	            	ace_tables = data.value;
 	                if(window.isAceAddCompleterTables){

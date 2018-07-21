@@ -32,44 +32,6 @@ public class SQLController {
 
     @Resource
     private SQLService sqlService;
-    
-    /**
-     * 获取SQL对象树
-     * @param name
-     * @param type
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("/topTreeNodes")
-    public SQLResponse topTreeNodes() {
-    	logger.debug("sql/topTreeNodes");
-    	return SQLResponse.build(this.sqlService.topTreeNodes());
-    }
-    /**
-     * 获取数据库中的所有表
-     * @param database 数据库名
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("/tables")
-    public SQLResponse tables(String database) {
-        logger.debug("sql/tables");
-        return SQLResponse.build(this.sqlService.tables(database));
-    }
-
-    /**
-     * 获取表的列信息
-     *
-     * @param database 数据库名
-     * @param tableName 表名
-     * @return
-     */
-    @ResponseBody
-    @RequestMapping("/columns")
-    public SQLResponse columns(String database, String tableName) {
-        logger.debug("sql/columns tableName -> {}", tableName);
-        return SQLResponse.build(this.sqlService.columns(database, tableName));
-    }
 
     /**
      * 执行 SELECT 语句

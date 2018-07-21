@@ -81,7 +81,7 @@ public class SQLCloudFilter implements Filter {
 		String jdbcName = WEBUtils.getSessionJdbcName(session);
 		if(jdbcName != null) {
 			try {
-				JDBCManager.holderJdbcInfo(user.getUsername(), jdbcName);
+				JDBCManager.holderJdbc(user.getUsername(), jdbcName);
 			}catch (JDBCNotFoundException e) {
 				WEBUtils.setSessionJdbcName(session, null);
 			}

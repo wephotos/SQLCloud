@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.entity.JDBC;
 import cn.sql.cloud.jdbc.JDBCManager;
 
 /**
@@ -12,8 +12,8 @@ import cn.sql.cloud.jdbc.JDBCManager;
  * @author Administrator
  *
  */
-@Service("jdbcInfoService")
-public class JDBCInfoService {
+@Service("jdbcService")
+public class JDBCService {
 
 	/**
 	 * 添加 JDBC 连接信息到用户下
@@ -21,8 +21,8 @@ public class JDBCInfoService {
 	 * @param username
 	 * @return
 	 */
-	public boolean add(JDBCInfo jdbc, String username) {
-		return JDBCManager.addJdbcInfo(jdbc, username);
+	public boolean add(JDBC jdbc, String username) {
+		return JDBCManager.addJdbc(jdbc, username);
 	}
 	
 	/**
@@ -32,7 +32,7 @@ public class JDBCInfoService {
 	 * @return
 	 */
 	public boolean remove(String jdbcName, String username) {
-		return JDBCManager.removeJdbcInfo(username, jdbcName);
+		return JDBCManager.removeJdbc(username, jdbcName);
 	}
 	
 	/**
@@ -40,8 +40,8 @@ public class JDBCInfoService {
 	 * @param username
 	 * @return
 	 */
-	public List<JDBCInfo> list(String username){
-		return JDBCManager.getJdbcInfoList(username);
+	public List<JDBC> list(String username){
+		return JDBCManager.getJdbcList(username);
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class JDBCInfoService {
 	 * @param database
 	 */
 	public void useDatabase(String database) {
-		JDBCInfo jdbc = JDBCManager.getHolderJdbcInfo();
+		JDBC jdbc = JDBCManager.getHolderJdbc();
 		jdbc.setDatabase(database);
 	}
 }

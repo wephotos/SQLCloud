@@ -1,24 +1,24 @@
 package cn.sql.cloud.entity;
 
 /**
- * 数据库对象接口 Database,Table,Column...
+ * 元数据接口;  Database,Table,Column...
  * @author TQ
  *
  */
-public interface SQLObject {
+public interface MetaData {
 	
 	/**
 	 * 数据库对象类型
 	 */
-	String DATABASE = "DATABASE";
+	String DATABASE = "database";
 	/**
 	 * 表对象类型
 	 */
-	String TABLE = "TABLE";
+	String TABLE = "table";
 	/**
 	 * 列对象类型
 	 */
-	String COLUMN = "COLUMN";
+	String COLUMN = "column";
 	
 	/**
 	 * 数据库对象名

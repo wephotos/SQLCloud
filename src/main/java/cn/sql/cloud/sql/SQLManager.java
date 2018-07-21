@@ -1,6 +1,6 @@
 package cn.sql.cloud.sql;
 
-import cn.sql.cloud.entity.JDBCInfo;
+import cn.sql.cloud.entity.JDBC;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.jdbc.JDBCManager;
 
@@ -16,7 +16,7 @@ public final class SQLManager {
 	 * @return
 	 */
 	public static ISQL getSQL() {
-		JDBCInfo jdbc = JDBCManager.getHolderJdbcInfo();
+		JDBC jdbc = JDBCManager.getHolderJdbc();
 		if(jdbc != null) {
 			return getSQL(jdbc.getSqlType());
 		}

@@ -29,18 +29,20 @@ public interface ISQL {
 	
 	/**
 	 * 获取查询数据库中表的语句 Columns[tableName,createTime,updateTime,tableComment]
-	 * @param database
+	 * @param database 数据库
+	 * @param username 用户名
 	 * @return
 	 */
-	String getSQLTables(String database);
+	String getSQLTables(String database, String username);
 	
 	/**
 	 * 获取查询列的语句
-	 * @param database
-	 * @param tableName
+	 * @param database 数据库
+	 * @param username 用户名
+	 * @param tableName 表名
 	 * @return
 	 */
-	String getSQLColumns(String database, String tableName);
+	String getSQLColumns(String database, String username, String tableName);
 	
 	/**
 	 * 每页默认条数100

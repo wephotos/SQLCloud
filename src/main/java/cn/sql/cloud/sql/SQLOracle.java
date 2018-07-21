@@ -31,13 +31,13 @@ public class SQLOracle implements ISQL {
 	}
 
 	@Override
-	public String getSQLTables(String database) {
+	public String getSQLTables(String database, String username) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getSQLColumns(String database, String tableName) {
+	public String getSQLColumns(String database, String username, String tableName) {
 		// TODO Auto-generated method stub
 		return null;
 	}

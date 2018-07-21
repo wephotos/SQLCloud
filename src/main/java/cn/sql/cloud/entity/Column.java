@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class Column implements SQLObject {
+public class Column implements MetaData {
 
 	//列名
 	private String columnName;
