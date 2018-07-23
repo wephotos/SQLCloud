@@ -1,5 +1,7 @@
 package cn.sql.cloud.controller;
 
+import java.sql.SQLException;
+
 import javax.annotation.Resource;
 
 import org.slf4j.Logger;
@@ -8,7 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cn.sql.cloud.entity.SQLResponse;
+import cn.sql.cloud.entity.resp.SQLResponse;
 import cn.sql.cloud.service.MetaDataService;
 
 /**
@@ -31,10 +33,11 @@ public class MetaDataController {
      * @param name
      * @param type
      * @return
+     * @throws SQLException 
      */
     @ResponseBody
     @RequestMapping("/topTreeNodes")
-    public SQLResponse topTreeNodes() {
+    public SQLResponse topTreeNodes() throws SQLException {
     	logger.debug("sql/topTreeNodes");
     	return SQLResponse.build(this.metaDataService.topTreeNodes());
     }
@@ -42,10 +45,11 @@ public class MetaDataController {
      * 获取数据库中的所有表
      * @param database 数据库名
      * @return
+     * @throws SQLException 
      */
     @ResponseBody
     @RequestMapping("/tables")
-    public SQLResponse tables(String database) {
+    public SQLResponse tables(String database) throws SQLException {
         logger.debug("sql/tables");
         return SQLResponse.build(this.metaDataService.tables(database));
     }
@@ -56,10 +60,11 @@ public class MetaDataController {
      * @param database 数据库名
      * @param tableName 表名
      * @return
+     * @throws SQLException 
      */
     @ResponseBody
     @RequestMapping("/columns")
-    public SQLResponse columns(String database, String tableName) {
+    public SQLResponse columns(String database, String tableName) throws SQLException {
         logger.debug("sql/columns tableName -> {}", tableName);
         return SQLResponse.build(this.metaDataService.columns(database, tableName));
     }

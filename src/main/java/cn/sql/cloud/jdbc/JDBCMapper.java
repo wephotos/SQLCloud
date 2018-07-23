@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.sql.cloud.entity.QueryResult;
+import cn.sql.cloud.entity.resp.QueryResult;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.utils.SQLCloudUtils;
 
@@ -148,7 +148,13 @@ public class JDBCMapper {
 					if (!columnFieldNameEq(columnName, fieldName)) {
 						continue;
 					}
-					PropertyDescriptor descr = new PropertyDescriptor(fieldName, beanClass);
+					PropertyDescriptor descr;
+					try {
+						descr = new PropertyDescriptor(fieldName, beanClass);
+					} catch (IntrospectionException e) {
+						logger.error(e.getMessage());
+						continue;
+					}
 					Method writeMethod = descr.getWriteMethod();
 					if(writeMethod.getParameterCount() != 1) {
 						logger.error(writeMethod.getName()+"'s parameter count ne 1.");
@@ -156,7 +162,7 @@ public class JDBCMapper {
 					}
 					Class<?> parameterType = writeMethod.getParameterTypes()[0];
 					Object fieldValue = getColumnValueByClass(rs, i, parameterType);
-					logger.debug("parameterType ->{}, fieldValue ->{}", parameterType, fieldValue);
+					//logger.debug("parameterType ->{}, fieldValue ->{}", parameterType, fieldValue);
 					if (writeMethod != null) {
 						writeMethod.invoke(bean, fieldValue);
 						break;
@@ -165,8 +171,8 @@ public class JDBCMapper {
 
 			}
 			return bean;
-		} catch (SQLException | InstantiationException | IllegalAccessException | IntrospectionException
-				| IllegalArgumentException | InvocationTargetException e) {
+		} catch (SQLException | InstantiationException | IllegalAccessException |
+				 IllegalArgumentException | InvocationTargetException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);
 		}

@@ -117,7 +117,7 @@ $(function(){
 					if ($.isArray(node.children)) {
 						return true;
 					}
-					if (node.type == 'database') {
+					if (node.type == 'catalog' || node.type == 'schema') {
 						$.post("${path}/meta/tables", {
 							database : node.name
 						}, function(data, status, xhr) {
@@ -129,8 +129,8 @@ $(function(){
 									isParent : true,
 									type: table.type,
 									name : table.name,
-									database:table.database,
-									comment : table.tableComment,
+									comment : table.remarks,
+									database:table.tableCat?table.tableCat:table.tableSchem,
 								};
 							});
 							objectTree.addNodes(node, tables);
@@ -144,17 +144,20 @@ $(function(){
 								return false;
 							}
 							var columns = data.value.map(function(column) {
-								var PKNullable = "";
-								if (column.nullable === true) {
-									PKNullable = ",Nullable";
-								} else if (column.keyPrimary === true) {
-									PKNullable = ",PK";
+								var nullable = "";
+								if (column.nullable === 1) {
+									nullable = ",Nullable";
+								}
+								var icon_pk = "";
+								if (column.primaryKey === true) {
+									icon_pk = "${path}/resources/img/key.png";
 								}
 								return {
 									type:column.type,
-									value:column.columnName,
-									comment : column.columnComment,
-									name : (column.columnName + "," + column.columnType + PKNullable)
+									value:column.name,
+									icon:icon_pk,
+									comment : column.remarks,
+									name : (column.name + "," + column.typeName + ("("+column.columnSize+")") + nullable)
 								};
 							});
 							objectTree.addNodes(node, columns);
@@ -165,7 +168,7 @@ $(function(){
 				},
 				onClick : function(event, treeId, treeNode) {
 					//切换数据源 
-					if(treeNode.type == 'database'){
+					if(treeNode.type == 'catalog' || treeNode.type == 'schema'){
 						$.post("${path}/jdbc/useDatabase",{database:treeNode.name},function(data, status, xhr){
 							if(data.code != 200){
 								alert("切换数据库失败:" + data.message);

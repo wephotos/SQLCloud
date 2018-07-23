@@ -1,4 +1,4 @@
-package cn.sql.cloud.entity;
+package cn.sql.cloud.entity.resp;
 
 /**
  * 执行SQL的返回结果

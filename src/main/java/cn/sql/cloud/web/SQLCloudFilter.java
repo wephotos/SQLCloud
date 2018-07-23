@@ -18,8 +18,8 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
+import cn.sql.cloud.entity.resp.SQLResponse;
 import cn.sql.cloud.exception.JDBCNotFoundException;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.utils.SQLCloudConfig;

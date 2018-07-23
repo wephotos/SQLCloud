@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.SimpleMappingExceptionResolver;
 
-import cn.sql.cloud.entity.SQLResponse;
+import cn.sql.cloud.entity.resp.SQLResponse;
 import cn.sql.cloud.utils.SQLCloudUtils;
 
 /**

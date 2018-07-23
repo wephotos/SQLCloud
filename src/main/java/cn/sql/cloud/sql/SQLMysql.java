@@ -1,6 +1,17 @@
 package cn.sql.cloud.sql;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
 import com.mysql.jdbc.Driver;
+
+import cn.sql.cloud.entity.meta.Column;
+import cn.sql.cloud.entity.meta.PrimaryKey;
+import cn.sql.cloud.entity.meta.Table;
+import cn.sql.cloud.jdbc.JDBCMapper;
 
 /**
  * MySQL
@@ -15,44 +26,21 @@ public class SQLMysql implements ISQL {
 	}
 
 	static class InstanceProvider {
-		static SQLMysql mysql = new SQLMysql();
+		final static SQLMysql MYSQL = new SQLMysql();
 	}
 
-	public static SQLMysql build() {
-		return InstanceProvider.mysql;
+	public static SQLMysql getInstance() {
+		return InstanceProvider.MYSQL;
 	}
 
 	@Override
 	public String getDirverClass() {
 		return Driver.class.getName();
 	}
-	
-	@Override
-	public String getSQLDatabases() {
-		return "SELECT SCHEMA_NAME NAME FROM INFORMATION_SCHEMA.SCHEMATA";
-	}
 
 	@Override
 	public String getURL(String host, int port, String database) {
 		return "jdbc:mysql://" + host + ":" + port + "/" + database + "?characterEncoding=utf8&useSSL=false&autoReconnect=true";
-	}
-
-	@Override
-	public String getSQLTables(String database, String username) {
-		return "select table_schema data_base,table_name,create_time,update_time,table_comment "
-				+ "from information_schema.tables where table_schema='" + database + "'";
-	}
-
-	@Override
-	public String getSQLColumns(String database, String username, String tableName) {
-		return "SELECT COLUMN_NAME,DATA_TYPE,COLUMN_TYPE,COLUMN_COMMENT,"
-				+ "CASE IS_NULLABLE WHEN 'NO' THEN FALSE ELSE TRUE END NULLABLE,"
-				+ "CASE (SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE "
-				+ "TABLE_SCHEMA = INFORMATION_SCHEMA.COLUMNS.TABLE_SCHEMA "
-				+ "AND TABLE_NAME = INFORMATION_SCHEMA.COLUMNS.TABLE_NAME "
-				+ "AND COLUMN_NAME=INFORMATION_SCHEMA.COLUMNS.COLUMN_NAME AND CONSTRAINT_NAME='PRIMARY') "
-				+ "WHEN 'PRIMARY' THEN TRUE ELSE FALSE END KEY_PRIMARY FROM INFORMATION_SCHEMA.COLUMNS "
-				+ "WHERE TABLE_SCHEMA='" + database + "' AND TABLE_NAME='" + tableName + "'";
 	}
 
 	@Override
@@ -64,4 +52,37 @@ public class SQLMysql implements ISQL {
 		return "SELECT * FROM (" + sql + ") pageTable LIMIT " + start + "," + getPageSize();
 	}
 
+	@Override
+	public List<Table> getTables(String database, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getTables(database, "%", "%", null)){
+			return JDBCMapper.resultSet2List(rs, Table.class);
+		}
+	}
+
+	@Override
+	public List<Column> getColumns(String database, String tableName, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getColumns(database, "%", tableName, "%")){
+			List<Column> columns = JDBCMapper.resultSet2List(rs, Column.class);
+			List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
+			for(PrimaryKey key:keys) {
+				for(Column column:columns) {
+					if(key.getColumnName().equals(column.getName())) {
+						column.setPrimaryKey(true);
+						break;
+					}
+				}
+			}
+			return columns;
+		}
+	}
+
+	@Override
+	public List<PrimaryKey> getPrimaryKeys(String database, String tableName, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getPrimaryKeys(database, "%", tableName)){
+			return JDBCMapper.resultSet2List(rs, PrimaryKey.class);
+		}
+	}
 }

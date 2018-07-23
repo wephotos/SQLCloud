@@ -1,5 +1,18 @@
 package cn.sql.cloud.sql;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import cn.sql.cloud.entity.meta.Catalog;
+import cn.sql.cloud.entity.meta.Column;
+import cn.sql.cloud.entity.meta.IMetaData;
+import cn.sql.cloud.entity.meta.PrimaryKey;
+import cn.sql.cloud.entity.meta.Table;
+import cn.sql.cloud.jdbc.JDBCMapper;
+
 /**
  * SQL接口，提供一个统一标准，屏蔽各数据库差别
  * @author TQ
@@ -21,28 +34,45 @@ public interface ISQL {
 	
 	/**
 	 * 获取查询数据库的语句
+	 * @param conn 数据库连接
 	 * @return
+	 * @throws SQLException 
 	 */
-	default String getSQLDatabases() {
-		return null;
+	default List<? extends IMetaData> getDatabases(Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs =meta.getCatalogs()){
+			return JDBCMapper.resultSet2List(rs, Catalog.class);
+		}
 	}
 	
 	/**
-	 * 获取查询数据库中表的语句 Columns[tableName,createTime,updateTime,tableComment]
+	 * 获取数据库中所有的表
 	 * @param database 数据库
-	 * @param username 用户名
+	 * @param conn 连接信息
 	 * @return
+	 * @throws SQLException 
 	 */
-	String getSQLTables(String database, String username);
+	List<Table> getTables(String database, Connection conn) throws SQLException;
 	
 	/**
-	 * 获取查询列的语句
+	 * 获取表中所有的列信息
 	 * @param database 数据库
-	 * @param username 用户名
 	 * @param tableName 表名
+	 * @param conn 连接信息
 	 * @return
+	 * @throws SQLException 
 	 */
-	String getSQLColumns(String database, String username, String tableName);
+	List<Column> getColumns(String database, String tableName, Connection conn) throws SQLException;
+	
+	/**
+	 * 获取主键信息
+	 * @param database 数据库
+	 * @param tableName 表名
+	 * @param conn 连接
+	 * @return
+	 * @throws SQLException
+	 */
+	List<PrimaryKey> getPrimaryKeys(String database, String tableName, Connection conn) throws SQLException;
 	
 	/**
 	 * 每页默认条数100

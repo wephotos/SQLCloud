@@ -9,8 +9,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cn.sql.cloud.entity.QueryResult;
-import cn.sql.cloud.entity.UpdateResult;
+import cn.sql.cloud.entity.resp.QueryResult;
+import cn.sql.cloud.entity.resp.UpdateResult;
 import cn.sql.cloud.exception.SQLCloudException;
 
 /**

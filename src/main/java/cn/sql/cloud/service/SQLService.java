@@ -6,9 +6,9 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import cn.sql.cloud.entity.QueryResult;
-import cn.sql.cloud.entity.SQLResult;
-import cn.sql.cloud.entity.UpdateResult;
+import cn.sql.cloud.entity.resp.QueryResult;
+import cn.sql.cloud.entity.resp.SQLResult;
+import cn.sql.cloud.entity.resp.UpdateResult;
 import cn.sql.cloud.jdbc.SQLRunner;
 import cn.sql.cloud.sql.ISQL;
 import cn.sql.cloud.sql.SQLManager;

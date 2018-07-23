@@ -30,9 +30,9 @@ public final class SQLManager {
 	 */
 	public static ISQL getSQL(SQLType sqlType) {
 		if(SQLType.ORACLE == sqlType) {
-			return SQLOracle.build();
+			return SQLOracle.getInstance();
 		}else if(SQLType.MYSQL == sqlType) {
-			return SQLMysql.build();
+			return SQLMysql.getInstance();
 		}else {
 			throw new IllegalArgumentException(SQLManager.class.getName()+".getSQL(?) ->" + sqlType);
 		}

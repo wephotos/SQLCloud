@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import cn.sql.cloud.entity.JDBC;
-import cn.sql.cloud.entity.SQLResponse;
 import cn.sql.cloud.entity.User;
+import cn.sql.cloud.entity.resp.SQLResponse;
 import cn.sql.cloud.service.JDBCService;
 import cn.sql.cloud.web.WEBUtils;
 

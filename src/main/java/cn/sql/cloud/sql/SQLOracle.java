@@ -1,5 +1,17 @@
 package cn.sql.cloud.sql;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import cn.sql.cloud.entity.meta.Column;
+import cn.sql.cloud.entity.meta.PrimaryKey;
+import cn.sql.cloud.entity.meta.Table;
+import cn.sql.cloud.jdbc.JDBCMapper;
+
 /**
  * Oracle
  * 
@@ -13,11 +25,11 @@ public class SQLOracle implements ISQL {
 	}
 
 	static class InstanceProvider {
-		static SQLOracle oracle = new SQLOracle();
+		static SQLOracle ORACLE = new SQLOracle();
 	}
 
-	public static SQLOracle build() {
-		return InstanceProvider.oracle;
+	public static SQLOracle getInstance() {
+		return InstanceProvider.ORACLE;
 	}
 
 	@Override
@@ -31,15 +43,48 @@ public class SQLOracle implements ISQL {
 	}
 
 	@Override
-	public String getSQLTables(String database, String username) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Table> getTables(String database, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getTables(null, meta.getUserName(), "%", null)){
+			List<Table> tables = JDBCMapper.resultSet2List(rs, Table.class);
+			//移除回收站的表
+			List<Table> bins = new ArrayList<Table>();
+			for(Table table:tables) {
+				if(table.getTableName().startsWith("BIN$")) {
+					bins.add(table);
+				}
+			}
+			if(bins.size() > 0) {
+				tables.removeAll(bins);
+			}
+			return tables;
+		}
 	}
 
 	@Override
-	public String getSQLColumns(String database, String username, String tableName) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Column> getColumns(String database, String tableName, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getColumns(null, meta.getUserName(), tableName, "%")){
+			List<Column> columns = JDBCMapper.resultSet2List(rs, Column.class);
+			List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
+			for(PrimaryKey key:keys) {
+				for(Column column:columns) {
+					if(key.getName().equals(column.getName())) {
+						column.setPrimaryKey(true);
+						break;
+					}
+				}
+			}
+			return columns;
+		}
+	}
+
+	@Override
+	public List<PrimaryKey> getPrimaryKeys(String database, String tableName, Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs = meta.getPrimaryKeys(null, meta.getUserName(), tableName)){
+			return JDBCMapper.resultSet2List(rs, PrimaryKey.class);
+		}
 	}
 
 }

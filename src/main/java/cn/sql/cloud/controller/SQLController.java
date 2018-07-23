@@ -11,10 +11,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import cn.sql.cloud.entity.QueryResult;
-import cn.sql.cloud.entity.SQLResponse;
-import cn.sql.cloud.entity.SQLResult;
-import cn.sql.cloud.entity.UpdateResult;
+import cn.sql.cloud.entity.resp.QueryResult;
+import cn.sql.cloud.entity.resp.SQLResponse;
+import cn.sql.cloud.entity.resp.SQLResult;
+import cn.sql.cloud.entity.resp.UpdateResult;
 import cn.sql.cloud.service.SQLService;
 
 

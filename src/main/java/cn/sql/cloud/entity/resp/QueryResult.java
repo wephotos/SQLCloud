@@ -1,4 +1,4 @@
-package cn.sql.cloud.entity;
+package cn.sql.cloud.entity.resp;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +26,11 @@ public class QueryResult implements SQLResult {
 	 */
 	private List<Map<String, Object>> results = Collections.emptyList();
 	
+	@Override
+	public String getType() {
+		return QUERY;
+	}
+	
 	public long getTotal() {
 		if(total > 0) {
 			return total;
@@ -48,10 +53,6 @@ public class QueryResult implements SQLResult {
 	}
 	public void setResults(List<Map<String, Object>> results) {
 		this.results = results;
-	}
-	@Override
-	public String getType() {
-		return QUERY;
 	}
 	
 	@Override

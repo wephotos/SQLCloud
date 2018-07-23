@@ -1,4 +1,4 @@
-package cn.sql.cloud.entity;
+package cn.sql.cloud.entity.meta;
 
 import java.sql.DatabaseMetaData;
 

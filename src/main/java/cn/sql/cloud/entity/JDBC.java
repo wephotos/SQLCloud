@@ -1,5 +1,8 @@
 package cn.sql.cloud.entity;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import cn.sql.cloud.sql.SQLType;
 
 /**
@@ -83,5 +86,10 @@ public class JDBC {
 	
 	public SQLType getSqlType() {
 		return sqlType;
+	}
+	
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
 	}
 }

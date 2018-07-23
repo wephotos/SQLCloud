@@ -1,6 +1,9 @@
-package cn.sql.cloud.entity;
+package cn.sql.cloud.entity.resp;
 
 import java.io.Serializable;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 /**
  * 响应数据结构
@@ -60,5 +63,10 @@ public class SQLResponse implements Serializable {
 	
 	public static SQLResponse build(Object value) {
 		return new SQLResponse().setValue(value);
+	}
+	
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.JSON_STYLE);
 	}
 }
