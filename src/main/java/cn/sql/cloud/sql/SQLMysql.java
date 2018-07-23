@@ -8,7 +8,9 @@ import java.util.List;
 
 import com.mysql.jdbc.Driver;
 
+import cn.sql.cloud.entity.meta.Catalog;
 import cn.sql.cloud.entity.meta.Column;
+import cn.sql.cloud.entity.meta.IMetaData;
 import cn.sql.cloud.entity.meta.PrimaryKey;
 import cn.sql.cloud.entity.meta.Table;
 import cn.sql.cloud.jdbc.JDBCMapper;
@@ -42,14 +44,13 @@ public class SQLMysql implements ISQL {
 	public String getURL(String host, int port, String database) {
 		return "jdbc:mysql://" + host + ":" + port + "/" + database + "?characterEncoding=utf8&useSSL=false&autoReconnect=true";
 	}
-
+	
 	@Override
-	public String pageSQL(String sql, int pageNo) {
-		if(pageNo < 1) {
-			throw new IllegalArgumentException("The page number can't be less than 1");
+	public List<? extends IMetaData> getDatabases(Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		try(ResultSet rs =meta.getCatalogs()){
+			return JDBCMapper.resultSet2List(rs, Catalog.class);
 		}
-		int start = (pageNo - 1) * getPageSize();
-		return "SELECT * FROM (" + sql + ") pageTable LIMIT " + start + "," + getPageSize();
 	}
 
 	@Override
@@ -84,5 +85,14 @@ public class SQLMysql implements ISQL {
 		try(ResultSet rs = meta.getPrimaryKeys(database, "%", tableName)){
 			return JDBCMapper.resultSet2List(rs, PrimaryKey.class);
 		}
+	}
+
+	@Override
+	public String pageSQL(String sql, int pageNo) {
+		if(pageNo < 1) {
+			throw new IllegalArgumentException("The page number can't be less than 1");
+		}
+		int start = (pageNo - 1) * getPageSize();
+		return "SELECT * FROM (" + sql + ") pageTable LIMIT " + start + "," + getPageSize();
 	}
 }

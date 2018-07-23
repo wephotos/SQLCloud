@@ -70,296 +70,300 @@ $(function(){
 			dataFilter:function(treeId, parentNode, data) {
 				if(data.code == 200){
 					return data.value.map(function(node){
-							return {
-								id : -1,
-								isParent : true,
-								type: node.type,
-								name : node.name,
-								comment:"click use database",
-								icon:"${path}/resources/img/database_21px.png"
-							};
-						});
-					} else {
-						alert(data.message);
-						return [];
-					}
-				}
-			},
-			view : {
-				showLine : false,
-				selectedMulti:false,
-				fontCss:function(treeId, treeNode){
-					var nodes = objectTree.getSelectedNodes();
-					for(var i=0;i<nodes.length;i++){
-						if(nodes[i] == treeNode){
-							return {"font-weight":"bold","color":"blue"};
+						var icon = "";
+						if(node.type == 'catalog' || node.type == 'schema'){
+							icon = "${path}/resources/img/database_21px.png";
 						}
-					}
-					return {"font-weight":"normal","color":"inherit"};
-				}
-			},
-			data : {
-				simpleData : {
-					enable : true,
-					idKey : "id",
-					pIdKey : "pId",
-					rootPId : -1
-				},
-				key : {
-					title : "comment"
-				}
-			},
-			callback : {
-				beforeAsync : function(treeId, treeNode) {
-					return treeNode == null;
-				},
-				beforeExpand : function(treeId, node) {//展开表格加载列
-					if ($.isArray(node.children)) {
-						return true;
-					}
-					if (node.type == 'catalog' || node.type == 'schema') {
-						$.post("${path}/meta/tables", {
-							database : node.name
-						}, function(data, status, xhr) {
-							if (data.code != 200) {
-								return false;
-							}
-							var tables = data.value.map(function(table) {
-								return {
-									isParent : true,
-									type: table.type,
-									name : table.name,
-									comment : table.remarks,
-									database:table.tableCat?table.tableCat:table.tableSchem,
-								};
-							});
-							objectTree.addNodes(node, tables);
-						}, "json");
-					} else if (node.type == 'table') {
-						$.post("${path}/meta/columns", {
-							database : node.database,
-							tableName : node.name
-						}, function(data, status, xhr) {
-							if (data.code != 200) {
-								return false;
-							}
-							var columns = data.value.map(function(column) {
-								var nullable = "";
-								if (column.nullable === 1) {
-									nullable = ",Nullable";
-								}
-								var icon_pk = "";
-								if (column.primaryKey === true) {
-									icon_pk = "${path}/resources/img/key.png";
-								}
-								return {
-									type:column.type,
-									value:column.name,
-									icon:icon_pk,
-									comment : column.remarks,
-									name : (column.name + "," + column.typeName + ("("+column.columnSize+")") + nullable)
-								};
-							});
-							objectTree.addNodes(node, columns);
-						}, "json");
-					} else {
-						return true;
-					}
-				},
-				onClick : function(event, treeId, treeNode) {
-					//切换数据源 
-					if(treeNode.type == 'catalog' || treeNode.type == 'schema'){
-						$.post("${path}/jdbc/useDatabase",{database:treeNode.name},function(data, status, xhr){
-							if(data.code != 200){
-								alert("切换数据库失败:" + data.message);
-							}else{
-								aceAddCompleterTables(treeNode.name);
-								/**设置当前节点为选中样式**/
-								objectTree = $.fn.zTree.getZTreeObj("objectTree");
-								var nodes = objectTree.getNodesByFilter(function(node){return node.level == 0;});
-								for(var i=0;i<nodes.length;i++){
-									objectTree.updateNode(nodes[i]);
-								}
-							}
-						},"json");
-						return false;
-					}
-					//单击插入编辑器光标处
-					var cursor = editor.selection.getCursor();
-					var upText = editor.session.getTextRange({
-						start : {
-							row : cursor.row,
-							column : 0
-						},
-						end : cursor
-					}).toUpperCase().trim();
-					var insertText = (typeof treeNode.value === 'undefined' ? treeNode.name : treeNode.value);
-					if (upText) {
-						var digit = upText.charAt(upText.length - 1);
-						if (digit !== ',' && !upText.endsWith("SELECT")
-								&& !upText.endsWith("FROM")) {
-							insertText = ", " + insertText;
-						}
-					}
-					editor.insert(insertText);
-				},
-				onRightClick : function(event, treeId, treeNode) {//实现右键菜单
-					if(!treeNode){
-						return false;
-					}
-					if (treeNode.type != 'table') {
-						return false;
-					}
-					var trm = $("#table-right-menu");
-					trm.css({
-						"left" : event.clientX + "px",
-						"top" : event.clientY + "px"
-					}).slideDown("fast");
-					//打开表 
-					$("#open-table", trm).unbind("click").on("click",function() {
-						executeSQL("SELECT * FROM " + treeNode.name);
-					});
-					//改变表
-					$("#alter-table", trm).unbind("click").on("click",function() {
-						alert("开发中...");
-					});
-					//点击菜单以外区域隐藏 
-					$(document.body).bind("mousedown",function mousedown(event) {
-						if (event.target.id !== 'table-right-menu') {
-							trm.fadeOut("fast");
-							$("body").unbind("mousedown", mousedown);
-						}
-					});
-				}
-			}
-		};
-		//加载对象树 
-		var objectTree = $.fn.zTree.init($("#objectTree"), setting, []);
-
-		//执行SQL
-		$("#executeSQL").on("click", function() {
-			var range = editor.getSelectionRange();
-			var sql = editor.session.getTextRange(range);
-			//选中 > 光标 > 内容 
-			if (!sql.replace(/^\s+/, '')) {
-				sql = editor.getTextCursorRange();
-				if (!sql.replace(/^\s+/, '')) {
-					sql = editor.getValue();
-				}
-			}
-			if (!sql.replace(/^\s+\n+\r+/, '')) {
-				return false;
-			}
-			executeSQL(sql);
-		});
-		//执行SQL语句
-		function executeSQL(sql) {
-			var that = this;
-			$(this).addClass("disabled").css("pointer-events", "none");
-			sql = sql.toUpperCase().replace(/^\s+/, '');//转成大写，去除开头空格
-			$.post('${path}/sql/execute', {
-				sql : sql
-			}, function(data, status, xhr) {
-				emptyConsoleTabs();
-				if (data.code == 200) {
-					var results = data.value;
-					$.each(results, function(index, result) {
-						var console = newConsoleTab(index);
-						if (result.type == 'query') {
-							dynamicTable(result, console);
-						} else if (result.type == 'update') {
-							console.html("execute successfully. " + result.updateCount + " row updated");
-						} else {
-							//
-						}
+						return {
+							id : -1,
+							icon:icon,
+							isParent : true,
+							type: node.type,
+							name : node.name,
+							comment:"click use database"
+						};
 					});
 				} else {
-					newConsoleTab(0).html(data.message);
-				}
-				$(that).removeClass("disabled").css("pointer-events", "auto");
-			}, "json");
-		}
-
-		//根据查询结果动态输出表格
-		function dynamicTable(mapQuery, $console) {
-			var table = $("#tableModel").clone().attr("id", new Date().getTime());
-			var columnRow = table.find("thead tr");
-			columnRow.append("<th>序号</th>");
-			$.each(mapQuery.columnNames, function(index, columnName) {
-				var aliasName = columnName.split('.')[2];
-				columnRow.append("<th title='"+aliasName+"'>" + aliasName + "</th>");
-			});
-			var tbody = table.find("tbody");
-			var dataRowsHtml = [];//表格行HTML数组 
-			$.each(mapQuery.results, function(i, item) {
-				dataRowsHtml.push("<tr>");
-				dataRowsHtml.push("<td>" + (i + 1) + "</td>");
-				$.each(mapQuery.columnNames,function(index, columnName) {
-					var content = item[columnName];
-					if (content === true) {
-						content = "TRUE";
-					} else if (content === false) {
-						content = "FALSE";
-					} else if (content === null) {
-						content = "(Null)";
-					} else {
-						content = content.toString();
-					}
-					content = content.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-					var popover = "";
-					if (content != '(Null)' && content) {
-						popover = " data-toggle='popover' data-placement='top' data-content='"+ content + "' ";
-					}
-					dataRowsHtml.push("<td" + popover + ">" + content + "</td>");
-				});
-				dataRowsHtml.push("</tr>");
-			});
-			tbody.html(dataRowsHtml.join(""));
-			//bg-secondary text-white
-			var statusbar = $('<ul class="nav nav-tabs bg-light" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
-			statusbar.append('<li class="nav-item" style="font-size:12px;">总条数 ' + mapQuery.total + '行 已提取  ' + mapQuery.results.length + ' 行</li>');
-			var tableContent = $("<div style='height:100%;overflow: auto;'></div>");
-			$console.html(tableContent.append(table));
-			$console.append(statusbar);
-			$console.css({
-				"height" : "100%",
-				"padding-bottom" : "20px",
-				"box-sizing" : "border-box"
-			});
-			//Enable popovers everywhere
-			$('td[data-toggle="popover"]').popover();
-			$("div.popover").css("pointer-events", "none");
-		}
-
-		//新建一个控制台选项卡 并返回 ,index不可重复
-		function newConsoleTab(index) {
-			var tabId = "console-" + (index + 1);
-			var tab = $('<li class="nav-item"><a class="nav-link ' + (index == 0 ? 'active' : '') 
-					+ ' id="' + tabId + '-tab" data-toggle="tab" href="#' + tabId + '" role="tab">' + tabId + '</a></li>');
-			var tabContent = $('<div class="tab-pane fade ' + (index == 0 ? 'show active' : '') + 
-					'" id="' + tabId + '" role="tabpanel"></div>');
-
-			$("#consoleTabs").append(tab);
-			$("#consoleTabContent").append(tabContent);
-			return tabContent;
-		}
-		//清空控制台选项卡 
-		function emptyConsoleTabs() {
-			$("#consoleTabs").empty();
-			$("#consoleTabContent").empty();
-			$('td[data-toggle="popover"]').popover('dispose');
-		}
-
-		//点击其它区域 隐藏 popover
-		$(document).on("click", function(event) {
-			if (!$(event.target).hasClass("popover-body")) {
-				$('td[data-toggle="popover"]').popover('hide');
-				if ($(event.target).attr("data-toggle") == 'popover') {
-					$(event.target).popover('toggle');
+					alert(data.message);
+					return [];
 				}
 			}
-		});
+		},
+		view : {
+			showLine : false,
+			selectedMulti:false,
+			fontCss:function(treeId, treeNode){
+				var nodes = objectTree.getSelectedNodes();
+				for(var i=0;i<nodes.length;i++){
+					if(nodes[i] == treeNode){
+						return {"font-weight":"bold","color":"blue"};
+					}
+				}
+				return {"font-weight":"normal","color":"inherit"};
+			}
+		},
+		data : {
+			simpleData : {
+				enable : true,
+				idKey : "id",
+				pIdKey : "pId",
+				rootPId : -1
+			},
+			key : {
+				title : "comment"
+			}
+		},
+		callback : {
+			beforeAsync : function(treeId, treeNode) {
+				return treeNode == null;
+			},
+			beforeExpand : function(treeId, node) {//展开表格加载列
+				if ($.isArray(node.children)) {
+					return true;
+				}
+				if (node.type == 'catalog' || node.type == 'schema') {
+					$.post("${path}/meta/tables", {
+						database : node.name
+					}, function(data, status, xhr) {
+						if (data.code != 200) {
+							return false;
+						}
+						var tables = data.value.map(function(table) {
+							return {
+								isParent : true,
+								type: table.type,
+								name : table.name,
+								comment : table.remarks,
+								database:table.tableCat?table.tableCat:table.tableSchem,
+							};
+						});
+						objectTree.addNodes(node, tables);
+					}, "json");
+				} else if (node.type == 'table') {
+					$.post("${path}/meta/columns", {
+						database : node.database,
+						tableName : node.name
+					}, function(data, status, xhr) {
+						if (data.code != 200) {
+							return false;
+						}
+						var columns = data.value.map(function(column) {
+							var nullable = "";
+							if (column.nullable === 1) {
+								nullable = ",Nullable";
+							}
+							var icon_pk = "";
+							if (column.primaryKey === true) {
+								icon_pk = "${path}/resources/img/key.png";
+							}
+							return {
+								type:column.type,
+								value:column.name,
+								icon:icon_pk,
+								comment : column.remarks,
+								name : (column.name + "," + column.typeName + ("("+column.columnSize+")") + nullable)
+							};
+						});
+						objectTree.addNodes(node, columns);
+					}, "json");
+				} else {
+					return true;
+				}
+			},
+			onClick : function(event, treeId, treeNode) {
+				//切换数据源 
+				if(treeNode.type == 'catalog' || treeNode.type == 'schema'){
+					$.post("${path}/jdbc/useDatabase",{database:treeNode.name},function(data, status, xhr){
+						if(data.code != 200){
+							alert("切换数据库失败:" + data.message);
+						}else{
+							aceAddCompleterTables(treeNode.name);
+							/**设置当前节点为选中样式**/
+							objectTree = $.fn.zTree.getZTreeObj("objectTree");
+							var nodes = objectTree.getNodesByFilter(function(node){return node.level == 0;});
+							for(var i=0;i<nodes.length;i++){
+								objectTree.updateNode(nodes[i]);
+							}
+						}
+					},"json");
+					return false;
+				}
+				//单击插入编辑器光标处
+				var cursor = editor.selection.getCursor();
+				var upText = editor.session.getTextRange({
+					start : {
+						row : cursor.row,
+						column : 0
+					},
+					end : cursor
+				}).toUpperCase().trim();
+				var insertText = (typeof treeNode.value === 'undefined' ? treeNode.name : treeNode.value);
+				if (upText) {
+					var digit = upText.charAt(upText.length - 1);
+					if (digit !== ',' && !upText.endsWith("SELECT")
+							&& !upText.endsWith("FROM")) {
+						insertText = ", " + insertText;
+					}
+				}
+				editor.insert(insertText);
+			},
+			onRightClick : function(event, treeId, treeNode) {//实现右键菜单
+				if(!treeNode){
+					return false;
+				}
+				if (treeNode.type != 'table') {
+					return false;
+				}
+				var trm = $("#table-right-menu");
+				trm.css({
+					"left" : event.clientX + "px",
+					"top" : event.clientY + "px"
+				}).slideDown("fast");
+				//打开表 
+				$("#open-table", trm).unbind("click").on("click",function() {
+					executeSQL("SELECT * FROM " + treeNode.name);
+				});
+				//改变表
+				$("#alter-table", trm).unbind("click").on("click",function() {
+					alert("开发中...");
+				});
+				//点击菜单以外区域隐藏 
+				$(document.body).bind("mousedown",function mousedown(event) {
+					if (event.target.id !== 'table-right-menu') {
+						trm.fadeOut("fast");
+						$("body").unbind("mousedown", mousedown);
+					}
+				});
+			}
+		}
+	};
+	//加载对象树 
+	var objectTree = $.fn.zTree.init($("#objectTree"), setting, []);
+
+	//执行SQL
+	$("#executeSQL").on("click", function() {
+		var range = editor.getSelectionRange();
+		var sql = editor.session.getTextRange(range);
+		//选中 > 光标 > 内容 
+		if (!sql.replace(/^\s+/, '')) {
+			sql = editor.getTextCursorRange();
+			if (!sql.replace(/^\s+/, '')) {
+				sql = editor.getValue();
+			}
+		}
+		if (!sql.replace(/^\s+\n+\r+/, '')) {
+			return false;
+		}
+		executeSQL(sql);
 	});
+	//执行SQL语句
+	function executeSQL(sql) {
+		var that = this;
+		$(this).addClass("disabled").css("pointer-events", "none");
+		sql = sql.toUpperCase().replace(/^\s+/, '');//转成大写，去除开头空格
+		$.post('${path}/sql/execute', {
+			sql : sql
+		}, function(data, status, xhr) {
+			emptyConsoleTabs();
+			if (data.code == 200) {
+				var results = data.value;
+				$.each(results, function(index, result) {
+					var console = newConsoleTab(index);
+					if (result.type == 'query') {
+						dynamicTable(result, console);
+					} else if (result.type == 'update') {
+						console.html("execute successfully. " + result.updateCount + " row updated");
+					} else {
+						//
+					}
+				});
+			} else {
+				newConsoleTab(0).html(data.message);
+			}
+			$(that).removeClass("disabled").css("pointer-events", "auto");
+		}, "json");
+	}
+
+	//根据查询结果动态输出表格
+	function dynamicTable(mapQuery, $console) {
+		var table = $("#tableModel").clone().attr("id", new Date().getTime());
+		var columnRow = table.find("thead tr");
+		columnRow.append("<th>序号</th>");
+		$.each(mapQuery.columnNames, function(index, columnName) {
+			var aliasName = columnName.split('.')[2];
+			columnRow.append("<th title='"+aliasName+"'>" + aliasName + "</th>");
+		});
+		var tbody = table.find("tbody");
+		var dataRowsHtml = [];//表格行HTML数组 
+		$.each(mapQuery.results, function(i, item) {
+			dataRowsHtml.push("<tr>");
+			dataRowsHtml.push("<td>" + (i + 1) + "</td>");
+			$.each(mapQuery.columnNames,function(index, columnName) {
+				var content = item[columnName];
+				if (content === true) {
+					content = "TRUE";
+				} else if (content === false) {
+					content = "FALSE";
+				} else if (content === null) {
+					content = "(Null)";
+				} else {
+					content = content.toString();
+				}
+				content = content.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+				var popover = "";
+				if (content != '(Null)' && content) {
+					popover = " data-toggle='popover' data-placement='top' data-content='"+ content + "' ";
+				}
+				dataRowsHtml.push("<td" + popover + ">" + content + "</td>");
+			});
+			dataRowsHtml.push("</tr>");
+		});
+		tbody.html(dataRowsHtml.join(""));
+		//bg-secondary text-white
+		var statusbar = $('<ul class="nav nav-tabs bg-light" style="position: absolute;left: 0px;bottom:0px;width:100%;"></ul>');
+		statusbar.append('<li class="nav-item" style="font-size:12px;">总条数 ' + mapQuery.total + '行 已提取  ' + mapQuery.results.length + ' 行</li>');
+		var tableContent = $("<div style='height:100%;overflow: auto;'></div>");
+		$console.html(tableContent.append(table));
+		$console.append(statusbar);
+		$console.css({
+			"height" : "100%",
+			"padding-bottom" : "20px",
+			"box-sizing" : "border-box"
+		});
+		//Enable popovers everywhere
+		$('td[data-toggle="popover"]').popover();
+		$("div.popover").css("pointer-events", "none");
+	}
+
+	//新建一个控制台选项卡 并返回 ,index不可重复
+	function newConsoleTab(index) {
+		var tabId = "console-" + (index + 1);
+		var tab = $('<li class="nav-item"><a class="nav-link ' + (index == 0 ? 'active' : '') 
+				+ ' id="' + tabId + '-tab" data-toggle="tab" href="#' + tabId + '" role="tab">' + tabId + '</a></li>');
+		var tabContent = $('<div class="tab-pane fade ' + (index == 0 ? 'show active' : '') + 
+				'" id="' + tabId + '" role="tabpanel"></div>');
+
+		$("#consoleTabs").append(tab);
+		$("#consoleTabContent").append(tabContent);
+		return tabContent;
+	}
+	//清空控制台选项卡 
+	function emptyConsoleTabs() {
+		$("#consoleTabs").empty();
+		$("#consoleTabContent").empty();
+		$('td[data-toggle="popover"]').popover('dispose');
+	}
+
+	//点击其它区域 隐藏 popover
+	$(document).on("click", function(event) {
+		if (!$(event.target).hasClass("popover-body")) {
+			$('td[data-toggle="popover"]').popover('hide');
+			if ($(event.target).attr("data-toggle") == 'popover') {
+				$(event.target).popover('toggle');
+			}
+		}
+	});
+});
 </script>
 </head>
 <body>

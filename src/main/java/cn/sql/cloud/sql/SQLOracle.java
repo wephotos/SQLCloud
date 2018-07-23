@@ -5,9 +5,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import cn.sql.cloud.entity.meta.Catalog;
 import cn.sql.cloud.entity.meta.Column;
+import cn.sql.cloud.entity.meta.IMetaData;
 import cn.sql.cloud.entity.meta.PrimaryKey;
 import cn.sql.cloud.entity.meta.Table;
 import cn.sql.cloud.jdbc.JDBCMapper;
@@ -40,6 +43,13 @@ public class SQLOracle implements ISQL {
 	@Override
 	public String getURL(String host, int port, String database) {
 		return "jdbc:oracle:thin:@" + host + ":" + port + ":" + database;
+	}
+	
+	@Override
+	public List<? extends IMetaData> getDatabases(Connection conn) throws SQLException {
+		Catalog catalog = new Catalog();
+		catalog.setTableCat("Tables");
+		return Arrays.asList(catalog);
 	}
 
 	@Override
@@ -87,4 +97,9 @@ public class SQLOracle implements ISQL {
 		}
 	}
 
+	@Override
+	public String pageSQL(String sql, int pageNo) {
+		return "SELECT * FROM(SELECT PAGETABLE.*,ROWNUM RN FROM(" + sql + ") PAGETABLE WHERE ROWNUM <= ("
+				+ getPageSize() + ")) WHERE RN > 0";
+	}
 }

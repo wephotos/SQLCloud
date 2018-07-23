@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.JDBC;
 import cn.sql.cloud.jdbc.JDBCManager;
+import cn.sql.cloud.sql.SQLType;
 
 /**
  * JDBC连接信息管理
@@ -50,6 +51,8 @@ public class JDBCService {
 	 */
 	public void useDatabase(String database) {
 		JDBC jdbc = JDBCManager.getHolderJdbc();
-		jdbc.setDatabase(database);
+		if(jdbc.getSqlType() != SQLType.ORACLE){
+			jdbc.setDatabase(database);
+		}
 	}
 }

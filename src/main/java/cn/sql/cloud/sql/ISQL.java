@@ -1,17 +1,13 @@
 package cn.sql.cloud.sql;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import cn.sql.cloud.entity.meta.Catalog;
 import cn.sql.cloud.entity.meta.Column;
 import cn.sql.cloud.entity.meta.IMetaData;
 import cn.sql.cloud.entity.meta.PrimaryKey;
 import cn.sql.cloud.entity.meta.Table;
-import cn.sql.cloud.jdbc.JDBCMapper;
 
 /**
  * SQL接口，提供一个统一标准，屏蔽各数据库差别
@@ -38,12 +34,7 @@ public interface ISQL {
 	 * @return
 	 * @throws SQLException 
 	 */
-	default List<? extends IMetaData> getDatabases(Connection conn) throws SQLException {
-		DatabaseMetaData meta = conn.getMetaData();
-		try(ResultSet rs =meta.getCatalogs()){
-			return JDBCMapper.resultSet2List(rs, Catalog.class);
-		}
-	}
+	List<? extends IMetaData> getDatabases(Connection conn) throws SQLException;
 	
 	/**
 	 * 获取数据库中所有的表
