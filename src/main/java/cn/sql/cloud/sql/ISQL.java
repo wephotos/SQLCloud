@@ -66,6 +66,28 @@ public interface ISQL {
 	List<PrimaryKey> getPrimaryKeys(String database, String tableName, Connection conn) throws SQLException;
 	
 	/**
+	 * 获取列信息，并在列中标记主键信息
+	 * @param database
+	 * @param tableName
+	 * @param conn
+	 * @return
+	 * @throws SQLException
+	 */
+	default List<Column> getColumnsPrimaryKey(String database, String tableName, Connection conn) throws SQLException{
+		List<Column> columns = getColumns(database, tableName, conn);
+		List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
+		for(PrimaryKey key:keys) {
+			for(Column column:columns) {
+				if(key.getName().equals(column.getName())) {
+					column.setPrimaryKey(true);
+					break;
+				}
+			}
+		}
+		return columns;
+	}
+	
+	/**
 	 * 每页默认条数100
 	 * @return 条数
 	 */

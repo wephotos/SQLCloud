@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import cn.sql.cloud.entity.meta.Catalog;
 import cn.sql.cloud.entity.meta.Column;
 import cn.sql.cloud.entity.meta.IMetaData;
 import cn.sql.cloud.entity.meta.PrimaryKey;
 import cn.sql.cloud.entity.meta.Table;
+import cn.sql.cloud.entity.meta.Virtual;
 import cn.sql.cloud.jdbc.JDBCMapper;
 
 /**
@@ -47,9 +47,7 @@ public class SQLOracle implements ISQL {
 	
 	@Override
 	public List<? extends IMetaData> getDatabases(Connection conn) throws SQLException {
-		Catalog catalog = new Catalog();
-		catalog.setTableCat("Tables");
-		return Arrays.asList(catalog);
+		return Arrays.asList(new Virtual("Tables"));
 	}
 
 	@Override
@@ -75,17 +73,7 @@ public class SQLOracle implements ISQL {
 	public List<Column> getColumns(String database, String tableName, Connection conn) throws SQLException {
 		DatabaseMetaData meta = conn.getMetaData();
 		try(ResultSet rs = meta.getColumns(null, meta.getUserName(), tableName, "%")){
-			List<Column> columns = JDBCMapper.resultSet2List(rs, Column.class);
-			List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
-			for(PrimaryKey key:keys) {
-				for(Column column:columns) {
-					if(key.getName().equals(column.getName())) {
-						column.setPrimaryKey(true);
-						break;
-					}
-				}
-			}
-			return columns;
+			return JDBCMapper.resultSet2List(rs, Column.class);
 		}
 	}
 

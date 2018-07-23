@@ -78,7 +78,11 @@ public class SQLCloudFilter implements Filter {
 			}
 			return;
 		}
-		String jdbcName = WEBUtils.getSessionJdbcName(session);
+		//优先使用参数中的连接
+		String jdbcName = request.getParameter("jdbcName");
+		if(jdbcName == null) {
+			jdbcName = WEBUtils.getSessionJdbcName(session);
+		}
 		if(jdbcName != null) {
 			try {
 				JDBCManager.holderJdbc(user.getUsername(), jdbcName);

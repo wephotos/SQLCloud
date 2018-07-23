@@ -64,7 +64,7 @@ public class MetaDataService {
 	 */
 	public List<Column> columns(String database, String tableName) throws SQLException{
 		Connection conn = JDBCManager.getConnection();
-		return SQLManager.getSQL().getColumns(database, tableName, conn);
+		return SQLManager.getSQL().getColumnsPrimaryKey(database, tableName, conn);
 	}
 	/**
 	 * 获取此数据库受支持的数据类型信息

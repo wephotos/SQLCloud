@@ -56,9 +56,9 @@ public class SQLService {
 				ISQL mysql = SQLManager.getSQL();
 				long total = 0;
 				if(SQLCloudUtils.startsWithSelect(single)) {
-					single = mysql.pageSQL(single, 1);
 					String countSQL = SQLCloudUtils.parseCountSQL(single);
 					total = SQLRunner.executeQuery(countSQL, Long.class).get(0);
+					single = mysql.pageSQL(single, 1);
 				}
 				QueryResult queryResult = executeQuery(single);
 				queryResult.setTotal(total);

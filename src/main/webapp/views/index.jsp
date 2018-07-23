@@ -52,7 +52,7 @@ $(function(){
 		var $tab = $('<a class="nav-link active" id="'+jdbc.name+'-tab" data-toggle="tab" href="#'+jdbc.name+'" role="tab">'+jdbc.name+'</a>');
 		var $close = $('<span class="glyphicon glyphicon-remove"></span>');
 		var $panel = $('<div class="tab-pane fade show active" id="'+jdbc.name+'" role="tabpanel"></div>');
-		var $iframe = $('<iframe id="main-iframe" class="main-iframe" src="${path}/views/container.jsp"></iframe>');
+		var $iframe = $('<iframe id="'+jdbc.name+'-iframe" class="main-iframe" src="${path}/views/container.jsp?jdbc='+jdbc.name+'"></iframe>');
 		//移除选中状态
 		$("a[data-toggle=tab]").removeClass("active");
 		$("div[role=tabpanel]").removeClass("show active");
@@ -95,6 +95,28 @@ $(function(){
 	    	window.event.cancelBubble=true;
 	    }
 	}
+	
+	//初始化连接参数
+	$("select[name=sqlType]").on("change", function(){
+		var VAL = $(this).val();
+		if('MYSQL' == VAL){
+			$("input[name=name]").val('mysql');
+			$("input[name=port]").val('3306');
+			$("input[name=username]").val('root');
+			$("input[name=password]").val('root');
+			$("input[name=host]").val('localhost');
+			$("input[name=database]").val('information_schema');
+		}else if('ORACLE' == VAL){
+			$("input[name=name]").val('oracle');
+			$("input[name=port]").val('1521');
+			$("input[name=username]").val('');
+			$("input[name=password]").val('');
+			$("input[name=database]").val('orcl');
+			$("input[name=host]").val('localhost');
+		}else{
+			//ignore
+		}
+	});
 });
 </script>
 <style type="text/css">
@@ -177,25 +199,25 @@ main,.tab-content{
 	          <div class="form-group row">
 			    <label for="colJdbcNameLabel" class="col-sm-2 col-form-label">连接名</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colJdbcNameLabel" name="name" placeholder="JDBC Name" required="required" value="jchctest">
+			      <input type="text" class="form-control" id="colJdbcNameLabel" name="name" placeholder="JDBC Name" required="required" value="localhost">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colHostLabel" class="col-sm-2 col-form-label">主机</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colHostLabel" name="host" placeholder="Host" required="required" value="172.20.1.199">
+			      <input type="text" class="form-control" id="colHostLabel" name="host" placeholder="Host" required="required" value="127.0.0.1">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colUsernameLabel" class="col-sm-2 col-form-label">用户名</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colUsernameLabel" name="username" placeholder="Username" required="required" value="jchctest">
+			      <input type="text" class="form-control" id="colUsernameLabel" name="username" placeholder="Username" required="required" value="root">
 			    </div>
 			  </div>
 			  <div class="form-group row">
 			    <label for="colPasswordLabel" class="col-sm-2 col-form-label">密码</label>
 			    <div class="col-sm-10">
-			      <input type="password" class="form-control" id="colPasswordLabel" name="password" placeholder="Password" required="required" value="Jchc20170321">
+			      <input type="password" class="form-control" id="colPasswordLabel" name="password" placeholder="Password" required="required" value="root">
 			    </div>
 			  </div>
 			  <div class="form-group row">
@@ -207,7 +229,7 @@ main,.tab-content{
 			  <div class="form-group row">
 			    <label for="colDatabaseLabel" class="col-sm-2 col-form-label">数据库</label>
 			    <div class="col-sm-10">
-			      <input type="text" class="form-control" id="colDatabaseLabel" name="database" placeholder="Database" required="required" value="jchc_supplier">
+			      <input type="text" class="form-control" id="colDatabaseLabel" name="database" placeholder="Database" required="required" value="sqlcloud">
 			    </div>
 			  </div>
 	      </div>

@@ -16,6 +16,10 @@ public interface IMetaData {
 	 */
 	String SCHEMA = "schema";
 	/**
+	 * 虚拟的
+	 */
+	String VIRTUAL = "virtual";
+	/**
 	 * TABLE
 	 */
 	String TABLE = "table";

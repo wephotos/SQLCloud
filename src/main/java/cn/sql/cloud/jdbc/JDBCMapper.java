@@ -152,7 +152,7 @@ public class JDBCMapper {
 					try {
 						descr = new PropertyDescriptor(fieldName, beanClass);
 					} catch (IntrospectionException e) {
-						logger.error(e.getMessage());
+						logger.warn(e.getMessage());
 						continue;
 					}
 					Method writeMethod = descr.getWriteMethod();

@@ -66,7 +66,7 @@ $(function(){
 	var setting = {
 		async:{
 			enable: true,
-			url: "${path}/meta/topTreeNodes",
+			url: "${path}/meta/topTreeNodes?jdbcName=${param.jdbc}",
 			dataFilter:function(treeId, parentNode, data) {
 				if(data.code == 200){
 					return data.value.map(function(node){
@@ -121,25 +121,7 @@ $(function(){
 				if ($.isArray(node.children)) {
 					return true;
 				}
-				if (node.type == 'catalog' || node.type == 'schema') {
-					$.post("${path}/meta/tables", {
-						database : node.name
-					}, function(data, status, xhr) {
-						if (data.code != 200) {
-							return false;
-						}
-						var tables = data.value.map(function(table) {
-							return {
-								isParent : true,
-								type: table.type,
-								name : table.name,
-								comment : table.remarks,
-								database:table.tableCat?table.tableCat:table.tableSchem,
-							};
-						});
-						objectTree.addNodes(node, tables);
-					}, "json");
-				} else if (node.type == 'table') {
+				if (node.type == 'table') {
 					$.post("${path}/meta/columns", {
 						database : node.database,
 						tableName : node.name
@@ -166,6 +148,25 @@ $(function(){
 						});
 						objectTree.addNodes(node, columns);
 					}, "json");
+				} else if('catalog|schema|virtual'.indexOf(node.type) > -1) {
+					$.post("${path}/meta/tables", {
+						database : node.name
+					}, function(data, status, xhr) {
+						if (data.code != 200) {
+							return false;
+						}
+						var tables = data.value.map(function(table) {
+							return {
+								isParent : true,
+								type: table.type,
+								name : table.name,
+								comment : table.remarks,
+								database:table.tableCat?table.tableCat:table.tableSchem,
+							};
+						});
+						objectTree.addNodes(node, tables);
+					}, "json");
+					
 				} else {
 					return true;
 				}
@@ -254,12 +255,14 @@ $(function(){
 		if (!sql.replace(/^\s+\n+\r+/, '')) {
 			return false;
 		}
-		executeSQL(sql);
+		$(this).addClass("disabled").css("pointer-events", "none");
+		var that = this;
+		executeSQL(sql,function(){
+			$(that).removeClass("disabled").css("pointer-events", "auto");
+		});
 	});
 	//执行SQL语句
-	function executeSQL(sql) {
-		var that = this;
-		$(this).addClass("disabled").css("pointer-events", "none");
+	function executeSQL(sql, callback) {
 		sql = sql.toUpperCase().replace(/^\s+/, '');//转成大写，去除开头空格
 		$.post('${path}/sql/execute', {
 			sql : sql
@@ -280,7 +283,9 @@ $(function(){
 			} else {
 				newConsoleTab(0).html(data.message);
 			}
-			$(that).removeClass("disabled").css("pointer-events", "auto");
+			if(typeof callback === 'function'){
+				callback();
+			}
 		}, "json");
 	}
 
@@ -487,7 +492,7 @@ $(function(){
 		//添加用于自动补全的表
 		var ace_tables = [];
 		function aceAddCompleterTables(database){
-			$.post('${path}/meta/tables',{database:database},function(data, status, xhr){
+			$.post('${path}/meta/tables?jdbcName=${param.jdbc}',{database:database},function(data, status, xhr){
 	            if(data.code == 200){
 	            	ace_tables = data.value;
 	                if(window.isAceAddCompleterTables){

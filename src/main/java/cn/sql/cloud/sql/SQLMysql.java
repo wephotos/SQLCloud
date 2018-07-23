@@ -65,17 +65,7 @@ public class SQLMysql implements ISQL {
 	public List<Column> getColumns(String database, String tableName, Connection conn) throws SQLException {
 		DatabaseMetaData meta = conn.getMetaData();
 		try(ResultSet rs = meta.getColumns(database, "%", tableName, "%")){
-			List<Column> columns = JDBCMapper.resultSet2List(rs, Column.class);
-			List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
-			for(PrimaryKey key:keys) {
-				for(Column column:columns) {
-					if(key.getColumnName().equals(column.getName())) {
-						column.setPrimaryKey(true);
-						break;
-					}
-				}
-			}
-			return columns;
+			return JDBCMapper.resultSet2List(rs, Column.class);
 		}
 	}
 
