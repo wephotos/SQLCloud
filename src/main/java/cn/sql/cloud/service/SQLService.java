@@ -10,7 +10,6 @@ import cn.sql.cloud.entity.resp.QueryResult;
 import cn.sql.cloud.entity.resp.SQLResult;
 import cn.sql.cloud.entity.resp.UpdateResult;
 import cn.sql.cloud.jdbc.SQLRunner;
-import cn.sql.cloud.sql.ISQL;
 import cn.sql.cloud.sql.SQLManager;
 import cn.sql.cloud.utils.SQLCloudUtils;
 
@@ -28,7 +27,18 @@ public class SQLService {
 	 * @return
 	 */
 	public QueryResult executeQuery(String sql) {
-		return SQLRunner.executeMapQuery(sql);
+		long total = 0;
+		String querySQL = sql;
+		if(SQLCloudUtils.startsWithSelect(sql)) {
+			String countSQL = SQLCloudUtils.parseCountSQL(sql);
+			if(countSQL != null) {
+				total = SQLRunner.executeQuery(countSQL, Long.class).get(0);
+				querySQL = SQLManager.getSQL().pageSQL(sql, 1);
+			}
+		}
+		QueryResult queryResult = SQLRunner.executeMapQuery(querySQL);
+		queryResult.setTotal(total);
+		return queryResult;
 	}
 
 	/**
@@ -53,16 +63,7 @@ public class SQLService {
 				continue;
 			}
 			if(SQLCloudUtils.isQuerySQL(single)) {
-				ISQL mysql = SQLManager.getSQL();
-				long total = 0;
-				if(SQLCloudUtils.startsWithSelect(single)) {
-					String countSQL = SQLCloudUtils.parseCountSQL(single);
-					total = SQLRunner.executeQuery(countSQL, Long.class).get(0);
-					single = mysql.pageSQL(single, 1);
-				}
-				QueryResult queryResult = executeQuery(single);
-				queryResult.setTotal(total);
-				results.add(queryResult);
+				results.add(executeQuery(single));
 			}else {
 				results.add(executeUpdate(single));
 			}

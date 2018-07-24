@@ -5,7 +5,10 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.Stack;
+import java.util.regex.Pattern;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -40,6 +43,10 @@ public final class SQLCloudUtils {
 	public static final String SQL_SELECT = "SELECT";
 	//SQL FROM
 	public static final String SQL_FROM = "FROM";
+	/**
+	 * matches select count(.) from ...
+	 */
+	public static final Pattern SELECT_COUNT_PATTERN = Pattern.compile("^\\s*SELECT\\s+COUNT\\(.*\\)\\s+FROM\\s+.+", Pattern.CASE_INSENSITIVE);
 	/**
 	 * 将字符串MD5
 	 * @param value
@@ -229,12 +236,21 @@ public final class SQLCloudUtils {
 	}
 	
 	/**
-	 * 将查询SQL解析成 count(1) .<br>
-	 * select column1,column2,... from table,... select count(1) from table,...
+	 * 将查询SQL解析成count语句
+	 * <br> 
+	 * 如果是select count... 语句将返回Null
+	 * <br>
+	 * select column1,column2,... from table,... -> select count(1) from table,...
 	 * @param sql
 	 * @return
 	 */
-	public static String parseCountSQL(String sql) {
+	@Nullable
+	public static String parseCountSQL(@Nonnull String sql) {
+		//matches select count...
+		if(SELECT_COUNT_PATTERN.matcher(sql).matches()) {
+			return null;
+		}
+		
 		Stack<String> selectStack = new Stack<String>();
 		char[] digits = sql.toCharArray();
 		int fromIndex = 0;
@@ -259,4 +275,7 @@ public final class SQLCloudUtils {
 		return SQL_SELECT.concat(" COUNT(1) TOTAL ").concat(sql.substring(fromIndex));
 	}
 
+	public static void main(String[] args) {
+		System.out.println(parseCountSQL("select count(1) from table"));
+	}
 }
