@@ -74,8 +74,8 @@ public class MetaDataController {
 	 * @return
 	 */
     @ResponseBody
-    @RequestMapping("/typeInfos")
-	public SQLResponse typeInfos(){
-    	return SQLResponse.build(metaDataService.typeInfos());
+    @RequestMapping("/getTypeInfo")
+	public SQLResponse getTypeInfo(){
+    	return SQLResponse.build(metaDataService.getTypeInfo());
 	}
 }

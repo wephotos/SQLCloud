@@ -70,7 +70,7 @@ public class MetaDataService {
 	 * 获取此数据库受支持的数据类型信息
 	 * @return
 	 */
-	public List<TypeInfo> typeInfos(){
+	public List<TypeInfo> getTypeInfo(){
 		try {
 			Connection conn = JDBCManager.getConnection();
 			ResultSet rs = conn.getMetaData().getTypeInfo();
