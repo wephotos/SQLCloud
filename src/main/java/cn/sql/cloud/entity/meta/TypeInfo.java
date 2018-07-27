@@ -10,7 +10,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * @author TQ
  *
  */
-public class SQLTypeInfo {
+public class TypeInfo {
 
 	/**
 	 * 类型名称
