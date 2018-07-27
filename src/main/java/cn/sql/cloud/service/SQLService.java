@@ -20,6 +20,8 @@ import cn.sql.cloud.utils.SQLCloudUtils;
  */
 @Service("sqlService")
 public class SQLService {
+	//页大小
+	public final static int PAGE_SIZE = 100;
 	
 	/**
 	 * 执行查询语句
@@ -33,7 +35,7 @@ public class SQLService {
 			String countSQL = SQLCloudUtils.parseCountSQL(sql);
 			if(countSQL != null) {
 				total = SQLRunner.executeQuery(countSQL, Long.class).get(0);
-				querySQL = SQLManager.getSQL().pageSQL(sql, 1);
+				querySQL = SQLManager.getSQL().pageSQL(sql, 1, PAGE_SIZE);
 			}
 		}
 		QueryResult queryResult = SQLRunner.executeMapQuery(querySQL);
