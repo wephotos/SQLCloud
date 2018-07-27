@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,24 +57,33 @@ public final class JDBCManager {
 	}
 	
 	/**
+	 * 根据名称获取JDBC信息
+	 * @param username
+	 * @param name
+	 * @return
+	 */
+	@Nullable
+	public static JDBC getJdbcByName(@Nonnull String username, @Nonnull String name) {
+		List<JDBC> list = getJdbcList(username);
+		for(JDBC item:list) {
+			if(item.getName().equals(name)) {
+				return item;
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * 移除用户下的JDBC连接
 	 * @param username
 	 * @param jdbcName
 	 * @return
 	 */
 	public static boolean removeJdbc(String username, String jdbcName) {
-		List<JDBC> list = USER_JDBC_INFO_MAP.get(username);
-		if(list != null) {
-			JDBC remove = null;
-			for(JDBC jdbc:list) {
-				if(jdbc.getName().equals(jdbcName)) {
-					remove = jdbc;
-					break;
-				}
-			}
-			if(remove != null) {
-				return list.remove(remove);
-			}
+		JDBC remove = getJdbcByName(username, jdbcName);
+		if(remove != null) {
+			
+			return USER_JDBC_INFO_MAP.get(username).remove(remove);
 		}
 		return false;
 	}
@@ -83,14 +95,7 @@ public final class JDBCManager {
 	 * @throws JDBCNotFoundException 
 	 */
 	public static void holderJdbc(String username, String jdbcName) throws JDBCNotFoundException {
-		List<JDBC> list = getJdbcList(username);
-		JDBC jdbc = null;
-		for(JDBC item:list) {
-			if(item.getName().equalsIgnoreCase(jdbcName)) {
-				jdbc = item;
-				break;
-			}
-		}
+		JDBC jdbc = getJdbcByName(username, jdbcName);
 		if(jdbc == null) {
 			throw new JDBCNotFoundException("获取不到JDBC连接信息. jdbcName -> " + jdbcName);
 		}else {
@@ -116,16 +121,7 @@ public final class JDBCManager {
 				return false;
 			}
 		}
-		Connection conn = null;
-		try {
-			conn = createConnection(jdbc);
-		} catch (SQLException e) {
-			throw new SQLCloudException("连接失败:" + e.getMessage());
-		}finally {
-			if(conn != null) {
-				try {conn.close();} catch (SQLException e) {}
-			}
-		}
+		try(Connection conn = createConnection(jdbc)){} catch (SQLException e) {/*close Connection*/}
 		return list.add(jdbc);
 	}
 	
@@ -133,13 +129,9 @@ public final class JDBCManager {
 	 * 获取当前线程持有的连接信息
 	 * @return
 	 */
+	@Nullable
 	public static JDBC getHolderJdbc() {
-		JDBC jdbc = JDBC_INFO_HOLDER.get();
-		if(jdbc == null) {
-			throw new SQLCloudException("当前线程中获取不到JDBC连接信息");
-		}else {
-			return jdbc;
-		}
+		return JDBC_INFO_HOLDER.get();
 	}
 	/**
 	 * 获取当前连接
@@ -149,27 +141,45 @@ public final class JDBCManager {
 		Connection conn = CONN_HOLDER.get();
 		if(conn == null) {
 			JDBC jdbc = getHolderJdbc();
-			try {
-				conn = createConnection(jdbc);
-			} catch (SQLException e) {
-				logger.error(e.getMessage());
-				throw new SQLCloudException(e);
+			if(jdbc == null) {
+				throw new SQLCloudException("当前线程未设置jdbc连接信息");
 			}
+			conn = createConnection(jdbc);
 			CONN_HOLDER.remove();
 			CONN_HOLDER.set(conn);
 		}
 		return conn;
 	}
 	
-	private static Connection createConnection(JDBC jdbc) throws SQLException {
+	/**
+	 * 根据JDBC信息创建连接
+	 * @param jdbc
+	 * @return
+	 */
+	public static Connection createConnection(JDBC jdbc) {
 		ISQL sql = SQLManager.getSQL(jdbc.getSqlType());
 		String url = sql.getURL(jdbc.getHost(), jdbc.getPort(), jdbc.getDatabase());
 		try {
 			Class.forName(sql.getDirverClass());
 			return DriverManager.getConnection(url, jdbc.getUsername(), jdbc.getPassword());
-		} catch (ClassNotFoundException e) {
+		} catch (ClassNotFoundException | SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException(e);
+		}
+	}
+	
+	/**
+	 * 使用指定的数据源名称创建连接
+	 * @param username 用户名
+	 * @param jdbcName JDBC名称
+	 * @return 新连接
+	 */
+	public static Connection getConnection(String username, String jdbcName) {
+		JDBC jdbc = getJdbcByName(username, jdbcName);
+		if(jdbc == null) {
+			throw new SQLCloudException("获取不到JDBC连接信息. jdbcName -> " + jdbcName);
+		} else {
+			return createConnection(jdbc);
 		}
 	}
 	
@@ -177,16 +187,24 @@ public final class JDBCManager {
 	 * 关闭当前数据库连接
 	 */
 	public static void closeConnection() {
-		Connection conn = CONN_HOLDER.get();
-		if(conn != null) {
-			CONN_HOLDER.remove();
-			try {
-				conn.close();
-				logger.info("closed Connection:{}, isClosed:{} ", conn.toString(), conn.isClosed());
-			} catch (SQLException e) {
-				logger.error("close jdbc Connection failed:" + e.getMessage());
-				throw new SQLCloudException(e);
-			}
+		close(CONN_HOLDER.get());
+	}
+	
+	/**
+	 * 关闭指定的数据库连接
+	 * @param conn 数据库连接
+	 */
+	public static void close(Connection conn) {
+		if(conn == null) {
+			return;
+		}
+		CONN_HOLDER.remove();
+		try {
+			conn.close();
+			logger.info("closed Connection:{}, isClosed:{} ", conn.toString(), conn.isClosed());
+		} catch (SQLException e) {
+			logger.error("close jdbc Connection failed:" + e.getMessage());
+			throw new SQLCloudException(e);
 		}
 	}
 }

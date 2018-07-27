@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.meta.Column;
 import cn.sql.cloud.entity.meta.IMetaData;
-import cn.sql.cloud.entity.meta.SQLTypeInfo;
+import cn.sql.cloud.entity.meta.TypeInfo;
 import cn.sql.cloud.entity.meta.Table;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.jdbc.JDBCManager;
@@ -70,11 +70,11 @@ public class MetaDataService {
 	 * 获取此数据库受支持的数据类型信息
 	 * @return
 	 */
-	public List<SQLTypeInfo> typeInfos(){
-		Connection conn = JDBCManager.getConnection();
+	public List<TypeInfo> typeInfos(){
 		try {
+			Connection conn = JDBCManager.getConnection();
 			ResultSet rs = conn.getMetaData().getTypeInfo();
-			return JDBCMapper.resultSet2List(rs, SQLTypeInfo.class);
+			return JDBCMapper.resultSet2List(rs, TypeInfo.class);
 		} catch (SQLException e) {
 			logger.error(e.getMessage());
 			throw new SQLCloudException("获取数据类型信息错误:" + e.getMessage());

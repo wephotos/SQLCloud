@@ -51,6 +51,9 @@ public class JDBCService {
 	 */
 	public void useDatabase(String database) {
 		JDBC jdbc = JDBCManager.getHolderJdbc();
+		if(jdbc == null) {
+			return;
+		}
 		if(jdbc.getSqlType() != SQLType.ORACLE){
 			jdbc.setDatabase(database);
 		}
