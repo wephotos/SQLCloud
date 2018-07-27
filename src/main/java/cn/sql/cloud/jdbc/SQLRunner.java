@@ -24,6 +24,7 @@ public class SQLRunner {
 	private static final Logger logger = LoggerFactory.getLogger(SQLRunner.class);
 	//指示从数据库中提取最大行数
 	public static final int MAX_FETCH_SIZE = 100;
+	
 	/**
 	 * 执行查询语句，返回多条记录
 	 * @param sql
@@ -31,8 +32,18 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static <E> List<E> executeQuery(String sql, Class<E> beanClass){
-		logger.info("executeQuery SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
+		return executeQuery(sql, beanClass, conn);
+	}
+	/**
+	 * 执行查询语句，返回多条记录
+	 * @param sql
+	 * @param beanClass
+	 * @param conn
+	 * @return
+	 */
+	public static <E> List<E> executeQuery(String sql, Class<E> beanClass, Connection conn){
+		logger.info("executeQuery SQL -> {}", sql);
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
@@ -59,8 +70,18 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static QueryResult executeMapQuery(String sql){
-		logger.info("executeMapQuery SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
+		return executeMapQuery(sql, conn);
+	}
+	
+	/**
+	 * 执行查询语句，返回多条记录
+	 * @param sql
+	 * @param conn
+	 * @return
+	 */
+	public static QueryResult executeMapQuery(String sql, Connection conn){
+		logger.info("executeMapQuery SQL -> {}", sql);
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
@@ -87,8 +108,19 @@ public class SQLRunner {
 	 * @return
 	 */
 	public static UpdateResult executeUpdate(String sql) {
-		logger.info("executeUpdate SQL -> {}", sql);
 		Connection conn = JDBCManager.getConnection();
+		return executeUpdate(sql, conn);
+	}
+	
+	/**
+	 * 查询以外的操作 DML
+	 * @param sql
+	 * @param conn 连接
+	 * @return
+	 */
+	public static UpdateResult executeUpdate(String sql, Connection conn) {
+		logger.info("executeUpdate SQL -> {}", sql);
+		
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn.prepareStatement(sql);
