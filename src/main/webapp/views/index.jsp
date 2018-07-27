@@ -16,23 +16,59 @@
 $(function(){
 	//保存JDBC连接
 	$("#create-jdbc-form").on("submit",function(){
-		var jdbcInfo = $(this).serializeJSON();
-		$.post("${path}/jdbc/add",jdbcInfo,function(data, status, xhr){
+		var jdbc = $(this).serializeJSON();
+		$.post("${path}/jdbc/add",jdbc,function(data, status, xhr){
 			if(data.code == 200){
-				newTab(jdbcInfo);
-				$('#JDBCModalCenter').modal('hide')
+				newTab(jdbc);
+				addSyncOption(jdbc.name);
+				$('#JDBCModalCenter').modal('hide');
 			}else{
 				alert(data.message);
 			}
 		},"json");
 		return false;
 	});
+	//同步数据
+	$("#sync-data-form").on("submit",function(){
+		var sync = $(this).serializeJSON();
+		if(sync.src == sync.dest){
+			alert("源连接和目标连接不能相同");
+			return false;
+		}
+		var progressbar = $("#sync-progress").show().find("div[role=progressbar]");
+		var width = 1;
+		var progressTimer = setInterval(function(){
+			if(width < 100){
+				progressbar.css("width", width + "%");
+				width += 5;
+			}else{
+				clearInterval(progressTimer);
+			}
+		}, 100);
+		$.post("${path}/sync/run", sync, function(data, status, xhr){
+			if(data.code == 200){
+				$("#sync-progress").hide();
+				clearInterval(progressTimer);
+				$('#SYNCModalCenter').modal('hide');
+			}else{
+				alert(data.message);
+			}
+		},"json");
+		return false;
+	});
+	//添加同步数据源选项
+	function addSyncOption(jdbcName){
+		var option = "<option value='"+jdbcName+"'>"+jdbcName+"</option>";
+		$("select[name=src]").append(option);
+		$("select[name=dest]").append(option);
+	}
 	//列出所有JDBC连接
 	(function listJDBC(){
 		$.post("${path}/jdbc/list",{},function(data, status, xhr){
 			if(data.code == 200){
 				$.each(data.value, function(index, jdbc){
 					newTab(jdbc);
+					addSyncOption(jdbc.name);
 				});
 			}else{
 				alert(data.message);
@@ -155,6 +191,12 @@ main,.tab-content{
 	        	<span style="vertical-align: middle;">连接</span>
 	        </a>
 	      </li>
+	      <li class="nav-item active">
+	      	<a class="nav-link" href="#" data-toggle="modal" data-target="#SYNCModalCenter">
+	        	<span class="glyphicon glyphicon-refresh"></span>
+	        	<span style="vertical-align: middle;">同步</span>
+	        </a>
+	      </li>
 	      <!-- <li class="nav-item dropdown">
 	        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 	          Dropdown link
@@ -174,6 +216,64 @@ main,.tab-content{
 	<main role="main">
 		<div class="tab-content" id="jdbcTabContent"></div>
 	</main>
+	
+	<!-- sync data modal -->
+	<div class="modal fade" id="SYNCModalCenter" tabindex="-1" role="dialog">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+			        <h5 class="modal-title">数据同步</h5>
+			        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+			          <span aria-hidden="true">&times;</span>
+			        </button>
+		        </div>
+		        <form id="sync-data-form" action="" onsubmit="return false;">
+		        	<div class="modal-body">
+		        		<div class="form-group row">
+						    <label for="colSyncSrcLabel" class="col-sm-3 col-form-label">来源连接</label>
+						    <div class="col-sm-9">
+						      <select id="colSyncSrcLabel" class="custom-select" name="src" required="required">
+								  <option value="">--请选择--</option>
+							  </select>
+						    </div>
+					    </div>
+					    <div class="form-group row">
+						    <label for="colSyncDestLabel" class="col-sm-3 col-form-label">目标连接</label>
+						    <div class="col-sm-9">
+						      <select id="colSyncDestLabel" class="custom-select" name="dest" required="required">
+								  <option value="">--请选择--</option>
+							  </select>
+						    </div>
+					    </div>
+					    <div class="form-group row align-items-center">
+						    <label for="colSyncDestLabel" class="col-sm-3 col-form-label">是否覆盖</label>
+						    <div class="col-sm-9">
+						      	<div class="form-check form-check-inline">
+								  <input class="form-check-input" type="radio" name="force" id="forceYes" value="true">
+								  <label class="form-check-label" for="forceYes">是</label>
+								</div>
+						        <div class="form-check form-check-inline">
+								  <input class="form-check-input" type="radio" name="force" id="forceNo" value="false" checked="checked">
+								  <label class="form-check-label" for="forceNo">否</label>
+							    </div>
+						    </div>
+					    </div>
+					    <div class="form-group row" id="sync-progress" style="display: none;">
+					   		<div class="col-sm-12">
+					    	<div class="progress">
+							  <div class="progress-bar progress-bar-striped" role="progressbar" style="width: 1%"></div>
+							</div>
+							</div>
+					    </div>
+		        	</div>
+		        	<div class="modal-footer">
+			          <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+			          <button type="submit" class="btn btn-primary">同步</button>
+			        </div>
+		        </form>
+			</div>
+		</div>
+	</div>
 
 	<!-- Create JDBC Modal -->
 	<div class="modal fade" id="JDBCModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">

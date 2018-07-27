@@ -9,22 +9,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import cn.sql.cloud.entity.JDBC;
 import cn.sql.cloud.entity.Sync;
 import cn.sql.cloud.entity.meta.Column;
-import cn.sql.cloud.entity.meta.TypeInfo;
 import cn.sql.cloud.entity.meta.Table;
+import cn.sql.cloud.entity.meta.TypeInfo;
 import cn.sql.cloud.exception.SQLCloudException;
 import cn.sql.cloud.jdbc.JDBCManager;
 import cn.sql.cloud.jdbc.JDBCMapper;
 import cn.sql.cloud.jdbc.SQLRunner;
 import cn.sql.cloud.sql.ISQL;
 import cn.sql.cloud.sql.SQLManager;
+import cn.sql.cloud.utils.SQLCloudUtils;
 
 /**
  * 数据库同步 Service
@@ -33,9 +38,15 @@ import cn.sql.cloud.sql.SQLManager;
  *
  */
 @Service("syncService")
+//使用到实例对象,需要考虑线程安全问题，不使用单例
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class SyncService {
 	// log
 	final static Logger logger = LoggerFactory.getLogger(SyncService.class);
+	/**
+	 * 批量同步的数据量
+	 */
+	public final static int SYNC_BATCH_SIZE = 1000;
 	/**
 	 * 源连接
 	 */
@@ -99,44 +110,14 @@ public class SyncService {
 	 *            数据库同步信息
 	 */
 	public void run(Sync sync) {
-		initConn(sync);
 		try {
+			initConn(sync);
 			List<Table> tables = sqlsrc.getTables(jdbcsrc.getDatabase(), connsrc);
 			for (Table table : tables) {
 				String tableName = table.getName();
-
-				List<Column> columns = sqldes.getColumns(jdbcdes.getDatabase(), tableName, conndes);
-				// 如果表存在，强制同步表结构为true，删除表
-				if (columns.isEmpty() == false && sync.isForce()) {
-					// drop table
-					SQLRunner.executeUpdate(dropTableSQL(tableName));
-				}
-				// 如果列为空或强制同步表结构，新建表
-				if (columns.isEmpty() || sync.isForce()) {
-					columns = sqlsrc.getColumns(jdbcsrc.getDatabase(), tableName, connsrc);
-					// 创建表
-					try {
-						SQLRunner.executeUpdate(createTableSQL(tableName, columns));
-					} catch (Exception e) {
-						logger.error("创建表失败:tableName:{}, errmsg:{}", tableName, e.getMessage());
-					}
-				}
-				String insertSQL = insertSQL(tableName, columns);
-				try (PreparedStatement prest = conndes.prepareStatement(insertSQL)) {
-					String selectTable = selectSQL(tableName);
-					try (Statement stmt = connsrc.createStatement()) {
-						try (ResultSet rs = stmt.executeQuery(selectTable)) {
-							while (rs.next()) {
-								for (int i = 1, l = columns.size(); i <= l; i++) {
-									String columnName = columns.get(i).getName();
-									prest.setObject(i, rs.getObject(columnName));
-								}
-								prest.addBatch();
-								prest.executeBatch();
-								conndes.commit();
-							}
-						}
-					}
+				List<Column> columns = syncStruct(tableName, sync);
+				if(!columns.isEmpty()) {
+					syncData(tableName, columns);
 				}
 			}
 		} catch (SQLException e) {
@@ -148,11 +129,84 @@ public class SyncService {
 	}
 	
 	/**
-	 * 根据jdbcType获取数据库中类型信息
-	 * @param jdbcType
+	 * 同步表数据
+	 * @param tableName
+	 * @param columns
+	 * @throws SQLException
+	 */
+	private void syncData(String tableName, List<Column> columns) throws SQLException {
+		String insertSQL = insertSQL(tableName, columns);
+		//预编译INSERT语句
+		try (PreparedStatement prest = conndes.prepareStatement(insertSQL)) {
+			String select = selectSQL(tableName);
+			int totalPN = getTotalPageNo(select);
+			try (Statement stmt = connsrc.createStatement()) {
+				//分页
+				for (int pageNo = 1; pageNo <= totalPN; pageNo++) {
+					String pageSQL = sqlsrc.pageSQL(select, pageNo, SYNC_BATCH_SIZE);
+					try (ResultSet rs = stmt.executeQuery(pageSQL)) {
+						while (rs.next()) {
+							for (int i = 0, l = columns.size(); i < l; i++) {
+								String columnName = columns.get(i).getName();
+								prest.setObject(i + 1, rs.getObject(columnName));
+							}
+							prest.addBatch();
+							prest.executeBatch();
+							conndes.commit();
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * 同步表结构，返回列信息，创建失败返回空集合
+	 * @param tableName
+	 * @return
+	 * @throws SQLException 
+	 */
+	private List<Column> syncStruct(String tableName, Sync sync) throws SQLException{
+		List<Column> columns = sqldes.getColumns(jdbcdes.getDatabase(), tableName, conndes);
+		// 如果表存在，强制同步表结构为true，删除表
+		if (columns.isEmpty() == false && sync.isForce()) {
+			SQLRunner.executeUpdate(dropTableSQL(tableName), conndes);
+		}
+		// 如果列为空或强制同步表结构，新建表
+		if (columns.isEmpty() || sync.isForce()) {
+			columns = sqlsrc.getColumns(jdbcsrc.getDatabase(), tableName, connsrc);
+			try {
+				SQLRunner.executeUpdate(createTableSQL(tableName, columns), conndes);
+			} catch (Exception e) {
+				logger.error("创建表失败:tableName:{}, errmsg:{}", tableName, e.getMessage());
+				return Collections.emptyList();
+			}
+		}
+		return columns;
+	}
+	
+	/**
+	 * 获取源数据总页数
+	 * @param sql
 	 * @return
 	 */
-	TypeInfo getTypeInfoByJdbcType(int jdbcType) {
+	private int getTotalPageNo(String sql) {
+		String countSQL = SQLCloudUtils.parseCountSQL(sql);
+		int total = SQLRunner.executeQuery(countSQL, Integer.class, connsrc).get(0);
+		if(total < SYNC_BATCH_SIZE) {
+			return 1;
+		}
+		int totalPN = total / SYNC_BATCH_SIZE;
+		return totalPN % SYNC_BATCH_SIZE == 0 ? totalPN : totalPN + 1;
+	}
+	
+	/**
+	 * 根据jdbcType获取数据库中类型信息
+	 * @param jdbcType {@link java.sql.Types}
+	 * @return
+	 */
+	@Nullable
+	private TypeInfo getTypeInfoByJdbcType(int jdbcType) {
 		for(TypeInfo typeInfo:typeInfosDest) {
 			if(typeInfo.getDataType() == jdbcType) {
 				return typeInfo;
@@ -166,10 +220,8 @@ public class SyncService {
 	 * @param tableName 表名
 	 * @return select * from tableName
 	 */
-	String selectSQL(String tableName) {
-		String selectSQL = new StringBuilder("SELECT * FROM ").append(tableName).toString();
-		logger.debug("selectSQL:{}", selectSQL);
-		return selectSQL;
+	private String selectSQL(String tableName) {
+		return new StringBuilder("SELECT * FROM ").append(tableName).toString();
 	}
 	
 	/**
@@ -177,10 +229,8 @@ public class SyncService {
 	 * @param tableName
 	 * @return
 	 */
-	String dropTableSQL(String tableName) {
-		String dropTableSQL = new StringBuilder("DROP TABLE ").append(tableName).toString();
-		logger.debug("dropTableSQL:{}", dropTableSQL);
-		return dropTableSQL;
+	private String dropTableSQL(String tableName) {
+		return new StringBuilder("DROP TABLE ").append(tableName).toString();
 	}
 
 	/**
@@ -189,8 +239,8 @@ public class SyncService {
 	 * @param columns 列集合
 	 * @return create table 语句
 	 */
-	String createTableSQL(String tableName, List<Column> columns) {
-		String createTableSQL = new StringBuilder("CREATE TABLE ").append(tableName).append("(")
+	private String createTableSQL(String tableName, List<Column> columns) {
+		return new StringBuilder("CREATE TABLE ").append(tableName).append("(")
 				.append(String.join(",", columns.stream().map(c -> {
 					StringBuilder fieldSql = new StringBuilder();
 					fieldSql.append(c.getName());
@@ -199,23 +249,23 @@ public class SyncService {
 					if (typeInfo == null) {
 						fieldSql.append("BLOB");
 					} else {
-						fieldSql.append(typeInfo.getTypeName());
+						fieldSql.append(typeInfo.getLocalTypeName());
 						// [(M[,D])] [UNSIGNED] [ZEROFILL]
 						String createParams = typeInfo.getCreateParams();
 						if (StringUtils.isNotBlank(createParams)) {
-							int m = c.getColumnSize();// 精度
-							int s = c.getDecimalDigits();// 标度
+							int M = c.getColumnSize();// 精度
+							int D = c.getDecimalDigits();// 标度
 							if (createParams.contains("M")) {
-								if (m == 0) {
-									m = typeInfo.getPrecision();
+								if (M == 0) {
+									M = typeInfo.getPrecision();
 								}
-								createParams = createParams.replace("M", String.valueOf(m));
+								createParams = createParams.replace("M", String.valueOf(M));
 							}
-							if (createParams.contains("D")) {
-								if (s == 0) {
-									s = typeInfo.getMinimumScale();
+							if (createParams.contains(",D")) {
+								if (D == 0) {
+									D = typeInfo.getMinimumScale();
 								}
-								createParams = createParams.replace("D", String.valueOf(s));
+								createParams = createParams.replace(",D", "," + D);
 							}
 							createParams = createParams.replaceAll("[^0-9,()]", "");
 							fieldSql.append(createParams);
@@ -224,8 +274,6 @@ public class SyncService {
 
 					return fieldSql.toString();
 				}).collect(Collectors.toList()))).append(")").toString();
-		logger.debug("createTableSQL:{}", createTableSQL);
-		return createTableSQL;
 	}
 
 	/**
@@ -234,13 +282,11 @@ public class SyncService {
 	 * @param columns 列信息
 	 * @return insert 语句
 	 */
-	String insertSQL(String tableName, List<Column> columns) {
-		String insertSQL = new StringBuilder("INSERT INTO ").append(tableName).append("(")
+	private String insertSQL(String tableName, List<Column> columns) {
+		return new StringBuilder("INSERT INTO ").append(tableName).append("(")
 				.append(String.join(",", columns.stream().map(c -> c.getName()).collect(Collectors.toList())))
 				.append(") ").append("VALUES(").append(String.join(",", Collections.nCopies(columns.size(), "?")))
 				.append(")").toString();
-		logger.debug("insertSQL:{}", insertSQL);
-		return insertSQL;
 	}
 
 }
