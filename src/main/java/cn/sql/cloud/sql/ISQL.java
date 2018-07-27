@@ -78,7 +78,7 @@ public interface ISQL {
 		List<PrimaryKey> keys = getPrimaryKeys(database, tableName, conn);
 		for(PrimaryKey key:keys) {
 			for(Column column:columns) {
-				if(key.getName().equals(column.getName())) {
+				if(key.getColumnName().equals(column.getName())) {
 					column.setPrimaryKey(true);
 					break;
 				}
@@ -88,20 +88,13 @@ public interface ISQL {
 	}
 	
 	/**
-	 * 每页默认条数100
-	 * @return 条数
-	 */
-	default int getPageSize() {
-		return 100;
-	}
-	
-	/**
 	 * 将SQL添加分页语句
 	 * @param sql
 	 * @param pageNo 页码 [1,2,3,...]
+	 * @param pageSize 每页大小
 	 * @return
 	 */
-	default String pageSQL(String sql, int pageNo) {
+	default String pageSQL(String sql, int pageNo, int pageSize) {
 		throw new java.lang.UnsupportedOperationException("分页方法未实现");
 	}
 

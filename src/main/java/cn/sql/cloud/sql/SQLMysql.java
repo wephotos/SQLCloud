@@ -78,11 +78,12 @@ public class SQLMysql implements ISQL {
 	}
 
 	@Override
-	public String pageSQL(String sql, int pageNo) {
-		if(pageNo < 1) {
+	public String pageSQL(String sql, int pageNo, int pageSize) {
+		if (pageNo < 1) {
 			throw new IllegalArgumentException("The page number can't be less than 1");
 		}
-		int start = (pageNo - 1) * getPageSize();
-		return "SELECT * FROM (" + sql + ") pageTable LIMIT " + start + "," + getPageSize();
+		int start = (pageNo - 1) * pageSize;
+		return new StringBuilder("SELECT * FROM (").append(sql).append(") pageTable LIMIT ").append(start).append(",")
+				.append(pageSize).toString();
 	}
 }

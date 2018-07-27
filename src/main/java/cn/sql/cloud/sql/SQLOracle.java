@@ -86,8 +86,13 @@ public class SQLOracle implements ISQL {
 	}
 
 	@Override
-	public String pageSQL(String sql, int pageNo) {
-		return "SELECT * FROM(SELECT PAGETABLE.*,ROWNUM RN FROM(" + sql + ") PAGETABLE WHERE ROWNUM <= ("
-				+ getPageSize() + ")) WHERE RN > 0";
+	public String pageSQL(String sql, int pageNo, int pageSize) {
+		if (pageNo < 1) {
+			throw new IllegalArgumentException("The page number can't be less than 1");
+		}
+		int start = (pageNo - 1) * pageSize;
+		return new StringBuilder("SELECT * FROM(SELECT PAGETABLE.*,ROWNUM RN FROM(").append(sql)
+				.append(") PAGETABLE WHERE ROWNUM <= (").append((start + pageSize)).append(")) WHERE RN > ")
+				.append(start).toString();
 	}
 }
