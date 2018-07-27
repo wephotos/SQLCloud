@@ -32,3 +32,6 @@
 .glyphicon-cloud:before {
   content: "\2601";
 }
+.glyphicon-refresh:before {
+  content: "\e031";
+}
