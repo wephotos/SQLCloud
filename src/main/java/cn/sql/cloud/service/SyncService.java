@@ -5,13 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -62,9 +61,9 @@ public class SyncService {
 	private ISQL sqlsrc;
 	private ISQL sqldes;
 	/**
-	 * 目标连接的数据类型信息
+	 *  {@link Types}与目标库的数据类型信息的映射
 	 */
-	private List<TypeInfo> typeInfosDest = Collections.emptyList();
+	private Map<Integer, TypeInfo> typeInfoMap = new HashMap<Integer, TypeInfo>(100);
 
 	/**
 	 * 初始化连接信息
@@ -83,7 +82,13 @@ public class SyncService {
 		
 		try {
 			try(ResultSet rs = conndes.getMetaData().getTypeInfo()){
-				typeInfosDest = JDBCMapper.resultSet2List(rs, TypeInfo.class);
+				List<TypeInfo> typeInfos = JDBCMapper.resultSet2List(rs, TypeInfo.class);
+				for(TypeInfo type:typeInfos) {
+					//优先匹配首选项
+					if(!typeInfoMap.containsKey(type.getDataType())) {
+						typeInfoMap.put(type.getDataType(), type);
+					}
+				}
 			}
 			//设置为手动提交
 			conndes.setAutoCommit(false);
@@ -98,7 +103,7 @@ public class SyncService {
 	private void release() {
 		JDBCManager.close(connsrc);
 		JDBCManager.close(conndes);
-		typeInfosDest = null;
+		typeInfoMap = null;
 		connsrc = null;
 		conndes = null;
 	}
@@ -106,8 +111,7 @@ public class SyncService {
 	/**
 	 * 同步数据库对象
 	 * 
-	 * @param sync
-	 *            数据库同步信息
+	 * @param sync 数据库同步信息
 	 */
 	public void run(Sync sync) {
 		try {
@@ -135,13 +139,12 @@ public class SyncService {
 	 * @throws SQLException
 	 */
 	private void syncData(String tableName, List<Column> columns) throws SQLException {
-		String insertSQL = insertSQL(tableName, columns);
+		String insertSQL = sqldes.insertSQL(tableName, columns);
 		//预编译INSERT语句
 		try (PreparedStatement prest = conndes.prepareStatement(insertSQL)) {
-			String select = selectSQL(tableName);
-			int totalPN = getTotalPageNo(select);
 			try (Statement stmt = connsrc.createStatement()) {
-				//分页
+				String select = sqlsrc.selectSQL(tableName);
+				int totalPN = getTotalPageNo(select);//分页同步
 				for (int pageNo = 1; pageNo <= totalPN; pageNo++) {
 					String pageSQL = sqlsrc.pageSQL(select, pageNo, SYNC_BATCH_SIZE);
 					try (ResultSet rs = stmt.executeQuery(pageSQL)) {
@@ -170,13 +173,13 @@ public class SyncService {
 		List<Column> columns = sqldes.getColumns(jdbcdes.getDatabase(), tableName, conndes);
 		// 如果表存在，强制同步表结构为true，删除表
 		if (columns.isEmpty() == false && sync.isForce()) {
-			SQLRunner.executeUpdate(dropTableSQL(tableName), conndes);
+			SQLRunner.executeUpdate(sqldes.dropTableSQL(tableName), conndes);
 		}
 		// 如果列为空或强制同步表结构，新建表
 		if (columns.isEmpty() || sync.isForce()) {
-			columns = sqlsrc.getColumns(jdbcsrc.getDatabase(), tableName, connsrc);
+			columns = sqlsrc.getColumnsPrimaryKey(jdbcsrc.getDatabase(), tableName, connsrc);
 			try {
-				SQLRunner.executeUpdate(createTableSQL(tableName, columns), conndes);
+				SQLRunner.executeUpdate(sqldes.createTableSQL(tableName, columns, typeInfoMap), conndes);
 			} catch (Exception e) {
 				logger.error("创建表失败:tableName:{}, errmsg:{}", tableName, e.getMessage());
 				return Collections.emptyList();
@@ -198,95 +201,6 @@ public class SyncService {
 		}
 		int totalPN = total / SYNC_BATCH_SIZE;
 		return totalPN % SYNC_BATCH_SIZE == 0 ? totalPN : totalPN + 1;
-	}
-	
-	/**
-	 * 根据jdbcType获取数据库中类型信息
-	 * @param jdbcType {@link java.sql.Types}
-	 * @return
-	 */
-	@Nullable
-	private TypeInfo getTypeInfoByJdbcType(int jdbcType) {
-		for(TypeInfo typeInfo:typeInfosDest) {
-			if(typeInfo.getDataType() == jdbcType) {
-				return typeInfo;
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * 根据表名生成 查询语句
-	 * @param tableName 表名
-	 * @return select * from tableName
-	 */
-	private String selectSQL(String tableName) {
-		return new StringBuilder("SELECT * FROM ").append(tableName).toString();
-	}
-	
-	/**
-	 * 删除表
-	 * @param tableName
-	 * @return
-	 */
-	private String dropTableSQL(String tableName) {
-		return new StringBuilder("DROP TABLE ").append(tableName).toString();
-	}
-
-	/**
-	 * 构建 create table 语句
-	 * @param tableName 表名
-	 * @param columns 列集合
-	 * @return create table 语句
-	 */
-	private String createTableSQL(String tableName, List<Column> columns) {
-		return new StringBuilder("CREATE TABLE ").append(tableName).append("(")
-				.append(String.join(",", columns.stream().map(c -> {
-					StringBuilder fieldSql = new StringBuilder();
-					fieldSql.append(c.getName());
-					fieldSql.append(" ");
-					TypeInfo typeInfo = getTypeInfoByJdbcType(c.getDataType());
-					if (typeInfo == null) {
-						fieldSql.append("BLOB");
-					} else {
-						fieldSql.append(typeInfo.getLocalTypeName());
-						// [(M[,D])] [UNSIGNED] [ZEROFILL]
-						String createParams = typeInfo.getCreateParams();
-						if (StringUtils.isNotBlank(createParams)) {
-							int M = c.getColumnSize();// 精度
-							int D = c.getDecimalDigits();// 标度
-							if (createParams.contains("M")) {
-								if (M == 0) {
-									M = typeInfo.getPrecision();
-								}
-								createParams = createParams.replace("M", String.valueOf(M));
-							}
-							if (createParams.contains(",D")) {
-								if (D == 0) {
-									D = typeInfo.getMinimumScale();
-								}
-								createParams = createParams.replace(",D", "," + D);
-							}
-							createParams = createParams.replaceAll("[^0-9,()]", "");
-							fieldSql.append(createParams);
-						}
-					}
-
-					return fieldSql.toString();
-				}).collect(Collectors.toList()))).append(")").toString();
-	}
-
-	/**
-	 * 创建 insert 语句
-	 * @param tableName 表名
-	 * @param columns 列信息
-	 * @return insert 语句
-	 */
-	private String insertSQL(String tableName, List<Column> columns) {
-		return new StringBuilder("INSERT INTO ").append(tableName).append("(")
-				.append(String.join(",", columns.stream().map(c -> c.getName()).collect(Collectors.toList())))
-				.append(") ").append("VALUES(").append(String.join(",", Collections.nCopies(columns.size(), "?")))
-				.append(")").toString();
 	}
 
 }
