@@ -40,22 +40,22 @@ public class SQLServiceJUnit {
 	@org.junit.Before
 	public void initMySQL() throws JDBCNotFoundException {
 		JDBC src = new JDBC();
-		src.setDatabase("sqlcloud");
-		src.setHost("127.0.0.1");
+		src.setDatabase("jchc_supplier");
+		src.setHost("172.20.1.199");
 		src.setName(jdbcName);
-		src.setUsername("root");
-		src.setPassword("root");
+		src.setUsername("jchctest");
+		src.setPassword("Jchc20170321");
 		src.setPort(3306);
 		src.setSqlType(SQLType.MYSQL);
 		JDBCManager.addJdbc(src, username);
 		JDBCManager.holderJdbc(username, jdbcName);
 		//目标库
 		JDBC dest = new JDBC();
-		dest.setDatabase("sqlcloud-bak");
-		dest.setHost("127.0.0.1");
+		dest.setDatabase("jchc_supplier_bak");
+		dest.setHost("172.20.1.199");
 		dest.setName(jdbcName.concat("-bak"));
-		dest.setUsername("root");
-		dest.setPassword("root");
+		dest.setUsername("jchctest");
+		dest.setPassword("Jchc20170321");
 		dest.setPort(3306);
 		dest.setSqlType(SQLType.MYSQL);
 		JDBCManager.addJdbc(dest, username);

@@ -274,8 +274,4 @@ public final class SQLCloudUtils {
 		}
 		return SQL_SELECT.concat(" COUNT(1) TOTAL ").concat(sql.substring(fromIndex));
 	}
-
-	public static void main(String[] args) {
-		System.out.println(parseCountSQL("select count(1) from table"));
-	}
 }
