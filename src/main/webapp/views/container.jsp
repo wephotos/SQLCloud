@@ -338,6 +338,10 @@ $(function(){
 		//Enable popovers everywhere
 		$('td[data-toggle="popover"]').popover();
 		$("div.popover").css("pointer-events", "none");
+		//fixed thead
+		tableContent.on("scroll", function(){
+			table.find("thead")[0].style.transform = 'translateY('+(this.scrollTop)+'px)';
+		});
 	}
 
 	//新建一个控制台选项卡 并返回 ,index不可重复
