@@ -7,13 +7,14 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import cn.sql.cloud.entity.JDBC;
-import cn.sql.cloud.entity.Sync;
-import cn.sql.cloud.exception.JDBCNotFoundException;
-import cn.sql.cloud.jdbc.JDBCManager;
-import cn.sql.cloud.service.MetaDataService;
-import cn.sql.cloud.service.SQLService;
-import cn.sql.cloud.service.SyncService;
+import com.github.wephotos.sqlcloud.entity.JDBC;
+import com.github.wephotos.sqlcloud.entity.Sync;
+import com.github.wephotos.sqlcloud.exception.JDBCNotFoundException;
+import com.github.wephotos.sqlcloud.jdbc.JDBCManager;
+import com.github.wephotos.sqlcloud.service.MetaDataService;
+import com.github.wephotos.sqlcloud.service.SQLService;
+import com.github.wephotos.sqlcloud.service.SyncService;
+import com.github.wephotos.sqlcloud.sql.SQLType;
 
 /**
  * JUnit 测试类

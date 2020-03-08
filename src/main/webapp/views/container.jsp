@@ -381,7 +381,7 @@ $(function(){
 	    <div class="col-3 bg-light" style="overflow: auto;">
 	    	<ul id="objectTree" class="ztree"></ul>
 	    </div>
-  		<div class="col-9" style="padding: 0px 5px;">
+  		<div class="col-9" style="padding: 0px 5px;height: 100%;">
   			<div class="container-fluid">
   				<div class="row" style="height: 55%;">
   					<div class="col" style="box-sizing: border-box;padding-top: 36px;padding-bottom: 5px;">
@@ -400,7 +400,7 @@ $(function(){
 				    </div>
   				</div>
   				<div class="row bg-white border-top border-secondary" style="height: 45%;">
-  					<div class="col">
+  					<div class="col" style="height: 100%;">
 				      <ul class="nav nav-tabs" id="consoleTabs" role="tablist" style="position: absolute;left: 0px;top:0px;"></ul>
 				      <div style="clear: both;"></div>
 				      <div class="tab-content" id="consoleTabContent" style="overflow: auto;height: 100%;padding-top: 30px;"></div>
