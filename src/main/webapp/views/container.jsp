@@ -378,7 +378,7 @@ $(function(){
 <body>
 	<div class="container-fluid">
 	  <div class="row main">
-	    <div class="col-3 bg-light" style="overflow: auto;">
+	    <div class="col-3 bg-light" style="overflow: auto;height: 100%;">
 	    	<ul id="objectTree" class="ztree"></ul>
 	    </div>
   		<div class="col-9" style="padding: 0px 5px;height: 100%;">
